@@ -1,0 +1,133 @@
+[
+  {
+    "id": "mgnrega",
+    "name": "MGNREGA",
+    "full_name": "Mahatma Gandhi National Rural Employment Guarantee Act",
+    "department": "Rural Development",
+    "fy": "2026-27",
+    "metrics": {
+      "total_households_provided_employment": 4850000,
+      "persondays_generated_crore": 12.3,
+      "target_persondays_crore": 18.0,
+      "avg_days_per_household": 38,
+      "expenditure_crore": 5420,
+      "budget_crore": 9800,
+      "utilization_pct": 55.3,
+      "wages_pending_over_15_days_crore": 320
+    },
+    "lagging_districts": [
+      {"district": "Araria", "persondays_pct_of_target": 42, "issue": "Low work demand registration"},
+      {"district": "Kishanganj", "persondays_pct_of_target": 45, "issue": "Contractor dependency, less community works"},
+      {"district": "Katihar", "persondays_pct_of_target": 48, "issue": "Delayed wage payments affecting demand"}
+    ],
+    "top_districts": [
+      {"district": "Gaya", "persondays_pct_of_target": 78},
+      {"district": "Nawada", "persondays_pct_of_target": 75},
+      {"district": "Jamui", "persondays_pct_of_target": 72}
+    ]
+  },
+  {
+    "id": "pmay_g",
+    "name": "PMAY-G",
+    "full_name": "Pradhan Mantri Awaas Yojana - Gramin",
+    "department": "Rural Development",
+    "fy": "2026-27",
+    "metrics": {
+      "total_target_houses": 350000,
+      "sanctioned": 328000,
+      "completed": 189000,
+      "completion_pct": 54.0,
+      "in_progress": 98000,
+      "not_started": 41000,
+      "expenditure_crore": 3200,
+      "budget_crore": 6100
+    },
+    "lagging_districts": [
+      {"district": "Supaul", "completion_pct": 35, "issue": "Land dispute cases pending"},
+      {"district": "Madhepura", "completion_pct": 38, "issue": "Beneficiary migration for labor"},
+      {"district": "Saharsa", "completion_pct": 40, "issue": "Material cost escalation"}
+    ],
+    "top_districts": [
+      {"district": "Nalanda", "completion_pct": 72},
+      {"district": "Patna Rural", "completion_pct": 70},
+      {"district": "Bhojpur", "completion_pct": 68}
+    ]
+  },
+  {
+    "id": "jjm",
+    "name": "JJM",
+    "full_name": "Jal Jeevan Mission",
+    "department": "Public Health Engineering",
+    "fy": "2026-27",
+    "metrics": {
+      "total_rural_households": 18500000,
+      "tap_connections_target": 18500000,
+      "tap_connections_provided": 14200000,
+      "coverage_pct": 76.8,
+      "functional_tap_connections_pct": 89,
+      "expenditure_crore": 8900,
+      "budget_crore": 12000,
+      "water_quality_labs_functional": 35,
+      "water_quality_labs_total": 38
+    },
+    "lagging_districts": [
+      {"district": "West Champaran", "coverage_pct": 55, "issue": "Difficult terrain, arsenic zones"},
+      {"district": "East Champaran", "coverage_pct": 58, "issue": "High population density, source sustainability"},
+      {"district": "Sitamarhi", "coverage_pct": 60, "issue": "Flood-prone, infrastructure damage"}
+    ],
+    "top_districts": [
+      {"district": "Patna", "coverage_pct": 95},
+      {"district": "Nalanda", "coverage_pct": 92},
+      {"district": "Munger", "coverage_pct": 90}
+    ]
+  },
+  {
+    "id": "jeevika",
+    "name": "JEEViKA",
+    "full_name": "Bihar Rural Livelihoods Promotion Society (BRLPS)",
+    "department": "Rural Development",
+    "fy": "2026-27",
+    "metrics": {
+      "total_shgs": 1250000,
+      "active_shgs": 1180000,
+      "women_mobilized_lakh": 145,
+      "community_investment_fund_crore": 2800,
+      "bank_linkage_crore": 4500,
+      "vo_formed": 85000,
+      "clf_formed": 1200
+    },
+    "lagging_districts": [
+      {"district": "Kishanganj", "shg_coverage_pct": 55, "issue": "Low social mobilization in minority areas"},
+      {"district": "Araria", "shg_coverage_pct": 58, "issue": "High dropout rate"},
+      {"district": "Purnia", "shg_coverage_pct": 60, "issue": "Credit absorption low"}
+    ],
+    "top_districts": [
+      {"district": "Muzaffarpur", "shg_coverage_pct": 92},
+      {"district": "Vaishali", "shg_coverage_pct": 90},
+      {"district": "Nalanda", "shg_coverage_pct": 88}
+    ]
+  },
+  {
+    "id": "midday_meal",
+    "name": "PM POSHAN",
+    "full_name": "Pradhan Mantri Poshan Shakti Nirman (Mid-Day Meal)",
+    "department": "Education",
+    "fy": "2026-27",
+    "metrics": {
+      "schools_covered": 72000,
+      "students_benefited_lakh": 185,
+      "avg_daily_attendance_pct": 78,
+      "kitchen_sheds_constructed": 58000,
+      "expenditure_crore": 2100,
+      "budget_crore": 3200
+    },
+    "lagging_districts": [
+      {"district": "Sheohar", "attendance_pct": 62, "issue": "Cook shortage, irregular supply"},
+      {"district": "Araria", "attendance_pct": 65, "issue": "Quality complaints from parents"}
+    ],
+    "top_districts": [
+      {"district": "Patna", "attendance_pct": 88},
+      {"district": "Bhagalpur", "attendance_pct": 85}
+    ]
+  }
+]

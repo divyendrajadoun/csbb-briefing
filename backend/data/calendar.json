@@ -1,0 +1,60 @@
+[
+  {
+    "date": "2026-06-07",
+    "events": [
+      {"time": "09:00", "title": "Morning Briefing with PS", "location": "CS Office", "type": "daily"},
+      {"time": "10:30", "title": "Review Meeting - Jal Jeevan Mission", "location": "Conference Room A", "type": "review"},
+      {"time": "14:00", "title": "Video Conference with District Magistrates (Flood Preparedness)", "location": "VC Room", "type": "vc"},
+      {"time": "16:00", "title": "File Clearing Hour", "location": "CS Office", "type": "daily"}
+    ]
+  },
+  {
+    "date": "2026-06-08",
+    "events": [
+      {"time": "09:00", "title": "Morning Briefing with PS", "location": "CS Office", "type": "daily"},
+      {"time": "11:00", "title": "Cabinet Sub-Committee on Urban Development", "location": "Secretariat Hall", "type": "committee"},
+      {"time": "15:00", "title": "Meeting with World Bank Team (BRLPS)", "location": "Conference Room B", "type": "external"}
+    ]
+  },
+  {
+    "date": "2026-06-09",
+    "events": [
+      {"time": "09:00", "title": "Morning Briefing with PS", "location": "CS Office", "type": "daily"},
+      {"time": "10:00", "title": "MGNREGA State-Level Review", "location": "Conference Room A", "type": "review"},
+      {"time": "12:00", "title": "Press Conference - Monsoon Preparedness", "location": "Media Room", "type": "media"},
+      {"time": "14:30", "title": "Meeting with Health Secretary (Heatwave Response)", "location": "CS Office", "type": "internal"}
+    ]
+  },
+  {
+    "date": "2026-06-10",
+    "events": [
+      {"time": "09:00", "title": "Morning Briefing with PS", "location": "CS Office", "type": "daily"},
+      {"time": "11:00", "title": "PMAY-G Progress Review with RDD Secretary", "location": "Conference Room A", "type": "review"},
+      {"time": "15:00", "title": "VC with NITI Aayog (SDG Targets)", "location": "VC Room", "type": "vc"}
+    ]
+  },
+  {
+    "date": "2026-06-11",
+    "events": [
+      {"time": "09:00", "title": "Morning Briefing with PS", "location": "CS Office", "type": "daily"},
+      {"time": "10:00", "title": "Weekly Law & Order Review", "location": "Home Dept Conference Room", "type": "review"},
+      {"time": "14:00", "title": "JEEViKA SHG Federation Meeting", "location": "BRLPS Office", "type": "field_visit"}
+    ]
+  },
+  {
+    "date": "2026-06-15",
+    "events": [
+      {"time": "09:00", "title": "Morning Briefing with PS", "location": "CS Office", "type": "daily"},
+      {"time": "10:30", "title": "Quarterly Performance Review - All Secretaries", "location": "Main Hall", "type": "review"},
+      {"time": "16:00", "title": "File Clearing Hour", "location": "CS Office", "type": "daily"}
+    ]
+  },
+  {
+    "date": "2026-07-01",
+    "events": [
+      {"time": "09:00", "title": "Morning Briefing with PS", "location": "CS Office", "type": "daily"},
+      {"time": "10:00", "title": "Monsoon Season Flood Control Room Activation", "location": "Disaster Management HQ", "type": "emergency"},
+      {"time": "14:00", "title": "Budget Utilization Review (Q1 FY27)", "location": "Finance Dept", "type": "review"}
+    ]
+  }
+]

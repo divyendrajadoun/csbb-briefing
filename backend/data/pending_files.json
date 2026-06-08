@@ -1,0 +1,86 @@
+[
+  {
+    "id": "file_001",
+    "subject": "Proposal for new Flood Shelter construction in Kosi belt (200 units)",
+    "department": "Disaster Management",
+    "submitted_by": "Secretary, DM Dept",
+    "submitted_on": "2026-05-28",
+    "age_days": 10,
+    "priority": "high",
+    "status": "awaiting_cs_approval",
+    "financial_implication_crore": 450,
+    "remarks": "Cabinet note ready, needs CS clearance before tabling"
+  },
+  {
+    "id": "file_002",
+    "subject": "Transfer posting of 15 IAS officers (2026 reshuffle)",
+    "department": "General Administration",
+    "submitted_by": "Secretary, GAD",
+    "submitted_on": "2026-06-01",
+    "age_days": 6,
+    "priority": "high",
+    "status": "awaiting_cs_approval",
+    "financial_implication_crore": 0,
+    "remarks": "CM office has been consulted, awaiting CS recommendation"
+  },
+  {
+    "id": "file_003",
+    "subject": "Revised DPR for Patna Metro Rail Phase-1 (cost escalation)",
+    "department": "Urban Development",
+    "submitted_by": "MD, Patna Metro Rail Corp",
+    "submitted_on": "2026-05-20",
+    "age_days": 18,
+    "priority": "medium",
+    "status": "awaiting_cs_approval",
+    "financial_implication_crore": 2800,
+    "remarks": "Cost increased from Rs 18,000 Cr to Rs 20,800 Cr. Finance dept has raised queries."
+  },
+  {
+    "id": "file_004",
+    "subject": "MoU with ISRO for satellite-based crop monitoring",
+    "department": "Agriculture",
+    "submitted_by": "Secretary, Agriculture",
+    "submitted_on": "2026-06-03",
+    "age_days": 4,
+    "priority": "medium",
+    "status": "awaiting_cs_approval",
+    "financial_implication_crore": 35,
+    "remarks": "Technical evaluation complete. Legal vetting done."
+  },
+  {
+    "id": "file_005",
+    "subject": "Enhancement of honorarium for Anganwadi workers",
+    "department": "Social Welfare",
+    "submitted_by": "Secretary, SW Dept",
+    "submitted_on": "2026-05-15",
+    "age_days": 23,
+    "priority": "medium",
+    "status": "awaiting_cs_approval",
+    "financial_implication_crore": 580,
+    "remarks": "Finance has flagged fiscal space concern. Needs discussion."
+  },
+  {
+    "id": "file_006",
+    "subject": "Empanelment of private hospitals under Ayushman Bharat",
+    "department": "Health",
+    "submitted_by": "Secretary, Health",
+    "submitted_on": "2026-06-05",
+    "age_days": 2,
+    "priority": "low",
+    "status": "awaiting_cs_approval",
+    "financial_implication_crore": 120,
+    "remarks": "Standard process, 23 hospitals recommended"
+  },
+  {
+    "id": "file_007",
+    "subject": "Proposal for Bihar Startup Fund (Rs 500 Cr corpus)",
+    "department": "Industries",
+    "submitted_by": "Secretary, Industries",
+    "submitted_on": "2026-05-25",
+    "age_days": 13,
+    "priority": "low",
+    "status": "awaiting_cs_approval",
+    "financial_implication_crore": 500,
+    "remarks": "Modeled on Karnataka/TN funds. Needs inter-dept consultation."
+  }
+]

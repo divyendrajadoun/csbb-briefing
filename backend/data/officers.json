@@ -1,0 +1,112 @@
+[
+  {
+    "id": "off_001",
+    "name": "Shri Amrit Lal Meena",
+    "service": "IAS",
+    "batch": "1992",
+    "current_post": "Additional Chief Secretary, Revenue & Land Reforms",
+    "district": null,
+    "phone": "9431XXXX01",
+    "email": "acs.rev@bihar.gov.in",
+    "posting_since": "2024-08-15"
+  },
+  {
+    "id": "off_002",
+    "name": "Smt. Bandana Preyashi",
+    "service": "IAS",
+    "batch": "1995",
+    "current_post": "Principal Secretary, Rural Development",
+    "district": null,
+    "phone": "9431XXXX02",
+    "email": "ps.rdd@bihar.gov.in",
+    "posting_since": "2025-01-10"
+  },
+  {
+    "id": "off_003",
+    "name": "Shri Deepak Anand",
+    "service": "IAS",
+    "batch": "2003",
+    "current_post": "District Magistrate, Muzaffarpur",
+    "district": "Muzaffarpur",
+    "phone": "9431XXXX03",
+    "email": "dm.muzaffarpur@bihar.gov.in",
+    "posting_since": "2025-06-01"
+  },
+  {
+    "id": "off_004",
+    "name": "Shri Kundan Kumar",
+    "service": "IAS",
+    "batch": "2005",
+    "current_post": "District Magistrate, Supaul",
+    "district": "Supaul",
+    "phone": "9431XXXX04",
+    "email": "dm.supaul@bihar.gov.in",
+    "posting_since": "2025-03-20"
+  },
+  {
+    "id": "off_005",
+    "name": "Smt. Ritu Sahay",
+    "service": "IAS",
+    "batch": "2000",
+    "current_post": "Secretary, Health Department",
+    "district": null,
+    "phone": "9431XXXX05",
+    "email": "secy.health@bihar.gov.in",
+    "posting_since": "2024-12-01"
+  },
+  {
+    "id": "off_006",
+    "name": "Shri Vivek Kumar Singh",
+    "service": "IAS",
+    "batch": "1998",
+    "current_post": "Secretary, Disaster Management",
+    "district": null,
+    "phone": "9431XXXX06",
+    "email": "secy.dm@bihar.gov.in",
+    "posting_since": "2025-02-15"
+  },
+  {
+    "id": "off_007",
+    "name": "Shri Pratyaya Amrit",
+    "service": "IAS",
+    "batch": "1991",
+    "current_post": "Development Commissioner",
+    "district": null,
+    "phone": "9431XXXX07",
+    "email": "dev.comm@bihar.gov.in",
+    "posting_since": "2023-11-01"
+  },
+  {
+    "id": "off_008",
+    "name": "Smt. Anupam Kumari",
+    "service": "IAS",
+    "batch": "2008",
+    "current_post": "District Magistrate, Patna",
+    "district": "Patna",
+    "phone": "9431XXXX08",
+    "email": "dm.patna@bihar.gov.in",
+    "posting_since": "2025-07-01"
+  },
+  {
+    "id": "off_009",
+    "name": "Shri Naveen Kumar",
+    "service": "IAS",
+    "batch": "2006",
+    "current_post": "District Magistrate, Gaya",
+    "district": "Gaya",
+    "phone": "9431XXXX09",
+    "email": "dm.gaya@bihar.gov.in",
+    "posting_since": "2025-04-10"
+  },
+  {
+    "id": "off_010",
+    "name": "Smt. Meena Kumari",
+    "service": "IAS",
+    "batch": "2010",
+    "current_post": "District Magistrate, Araria",
+    "district": "Araria",
+    "phone": "9431XXXX10",
+    "email": "dm.araria@bihar.gov.in",
+    "posting_since": "2026-01-15"
+  }
+]

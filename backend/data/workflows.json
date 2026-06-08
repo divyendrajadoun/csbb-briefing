@@ -1,0 +1,45 @@
+[
+  {
+    "id": "wf_001",
+    "type": "meeting_cancellation",
+    "title": "Cancel Review Meeting - Jal Jeevan Mission (June 7)",
+    "requested_by": null,
+    "status": "pending_approval",
+    "created_at": null,
+    "details": {
+      "original_event": "Review Meeting - Jal Jeevan Mission",
+      "original_date": "2026-06-07",
+      "original_time": "10:30",
+      "reason": null,
+      "notify_attendees": true
+    }
+  },
+  {
+    "id": "wf_002",
+    "type": "mom_draft",
+    "title": "MoM - District Magistrates VC on Flood Preparedness",
+    "requested_by": null,
+    "status": "pending_approval",
+    "created_at": null,
+    "details": {
+      "meeting_ref": "Video Conference with District Magistrates (Flood Preparedness)",
+      "meeting_date": "2026-06-07",
+      "action_items": [],
+      "attendees": []
+    }
+  },
+  {
+    "id": "wf_003",
+    "type": "broadcast",
+    "title": "Advisory to DMs - Heatwave Protocol Activation",
+    "requested_by": null,
+    "status": "pending_approval",
+    "created_at": null,
+    "details": {
+      "recipients": "All District Magistrates",
+      "message": null,
+      "priority": "high",
+      "channel": "official_email"
+    }
+  }
+]

@@ -1,0 +1,68 @@
+[
+  {
+    "id": "alert_001",
+    "type": "weather",
+    "severity": "critical",
+    "title": "Severe Heatwave Warning - North Bihar",
+    "description": "IMD issues red alert for 8 districts. Temperature expected 46-48°C for next 3 days. Districts: Bhagalpur, Banka, Munger, Begusarai, Khagaria, Samastipur, Darbhanga, Madhubani.",
+    "issued_at": "2026-06-06T18:00:00",
+    "valid_until": "2026-06-10T18:00:00",
+    "source": "IMD Patna",
+    "action_required": "Activate heat action plan, ensure water tanker deployment, open night shelters"
+  },
+  {
+    "id": "alert_002",
+    "type": "flood",
+    "severity": "high",
+    "title": "Flood Alert - Kosi River Basin",
+    "description": "Water level at Baltara gauge crossing warning mark. Nepal upstream discharge increasing. Affected districts: Supaul, Saharsa, Madhepura.",
+    "issued_at": "2026-06-07T06:00:00",
+    "valid_until": "2026-06-12T06:00:00",
+    "source": "Flood Management Cell, WRD",
+    "action_required": "Pre-position NDRF teams, issue evacuation advisory for low-lying areas, activate flood shelters"
+  },
+  {
+    "id": "alert_003",
+    "type": "sla_breach",
+    "severity": "high",
+    "title": "SLA Breach - MGNREGA Wage Payments",
+    "description": "Wage payments pending beyond 15 days for 3.2 lakh workers across 12 districts. FTO generation delayed at block level. Total pending: Rs 320 crore.",
+    "issued_at": "2026-06-05T10:00:00",
+    "valid_until": "2026-06-15T10:00:00",
+    "source": "RDD MIS",
+    "action_required": "Direct District Programme Coordinators to clear FTOs within 48 hours"
+  },
+  {
+    "id": "alert_004",
+    "type": "health",
+    "severity": "medium",
+    "title": "AES/JE Cases Rising - Muzaffarpur Division",
+    "description": "42 suspected AES cases reported in last 7 days across Muzaffarpur, Vaishali, and East Champaran. 3 deaths confirmed. Litchi season correlation suspected.",
+    "issued_at": "2026-06-06T14:00:00",
+    "valid_until": "2026-06-20T14:00:00",
+    "source": "State Health Society",
+    "action_required": "Deploy rapid response teams, ensure ICU bed availability, activate awareness campaign"
+  },
+  {
+    "id": "alert_005",
+    "type": "infrastructure",
+    "severity": "medium",
+    "title": "NH-31 Bridge Damage - Katihar",
+    "description": "Structural damage reported on NH-31 bridge near Katihar due to heavy vehicle overloading. Single-lane traffic imposed. Repair estimate: 45 days.",
+    "issued_at": "2026-06-04T09:00:00",
+    "valid_until": "2026-07-20T09:00:00",
+    "source": "NH Division, Road Construction Dept",
+    "action_required": "Coordinate with NHAI for emergency repair, arrange alternate route signage"
+  },
+  {
+    "id": "alert_006",
+    "type": "law_order",
+    "severity": "low",
+    "title": "Bandh Call - Patna on June 12",
+    "description": "Opposition parties called Bihar Bandh on June 12 over electricity tariff hike. Intelligence inputs suggest moderate response expected in Patna, Gaya, Bhagalpur.",
+    "issued_at": "2026-06-07T08:00:00",
+    "valid_until": "2026-06-12T23:59:00",
+    "source": "SB, Bihar Police",
+    "action_required": "Standard bandh protocol, ensure essential services unaffected"
+  }
+]
