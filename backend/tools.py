@@ -233,5 +233,5 @@ def execute_tool(name: str, arguments: dict) -> str:
     handler = TOOL_HANDLERS.get(name)
     if not handler:
         return json.dumps({"error": f"Unknown tool: {name}"})
-    result = handler(**arguments)
+    result = handler(**(arguments or {}))
     return json.dumps(result, ensure_ascii=False)
