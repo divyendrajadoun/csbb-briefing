@@ -369,7 +369,7 @@ export default function App() {
   const [role, setRole] = useState("cs");
   const [scrolled, setScrolled] = useState(false);
   const { messages, isConnected, isThinking, connect, disconnect, sendMessage } = useWebSocket(role);
-  const { speak } = useSpeech();
+  const { speak, unlockAudio } = useSpeech();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -394,6 +394,7 @@ export default function App() {
   }, [isConnected, welcomeSent]);
 
   const handleStart = () => {
+    unlockAudio();
     if (!isConnected) connect();
   };
 

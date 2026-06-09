@@ -52,6 +52,14 @@ export default function useSpeech() {
   }, []);
 
   const audioRef = useRef(null);
+  const unlockedRef = useRef(false);
+
+  // Unlock audio playback on first user interaction
+  const unlockAudio = useCallback(() => {
+    if (unlockedRef.current) return;
+    const silent = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=");
+    silent.play().then(() => { unlockedRef.current = true; }).catch(() => {});
+  }, []);
 
   const speak = useCallback(async (text) => {
     if (!text) return;
@@ -83,5 +91,5 @@ export default function useSpeech() {
     }
   }, []);
 
-  return { isListening, transcript, startListening, stopListening, speak };
+  return { isListening, transcript, startListening, stopListening, speak, unlockAudio };
 }
