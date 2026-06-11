@@ -1,7 +1,7 @@
 import json
 from groq import Groq
 from config import GROQ_API_KEY, MODEL, MAX_TOKENS
-from tools import TOOL_SCHEMAS, execute_tool
+from tools import TOOL_SCHEMAS, execute_tool, knowledge_bases
 from roles import get_allowed_tools
 from system_prompt import get_system_prompt
 
@@ -15,6 +15,7 @@ async def process_message(
     role_label: str,
     conversation_history: list,
     send_callback,
+    session_id: str = None,
 ):
     """
     Process a user message through Groq with tool use.
@@ -22,7 +23,8 @@ async def process_message(
     """
     allowed = get_allowed_tools(role)
     tools = [t for t in TOOL_SCHEMAS if t["function"]["name"] in allowed]
-    system = get_system_prompt(role, role_label)
+    kb_count = len(knowledge_bases.get(session_id, []))
+    system = get_system_prompt(role, role_label, kb_count=kb_count)
 
     conversation_history.append({"role": "user", "content": user_text})
 
@@ -91,7 +93,7 @@ async def process_message(
                 "input": func_args,
             })
 
-            result_str = execute_tool(func_name, func_args)
+            result_str = execute_tool(func_name, func_args, session_id=session_id)
 
             tool_msg = {
                 "role": "tool",

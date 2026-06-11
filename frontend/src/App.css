@@ -522,6 +522,27 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 }
 .mic-tip.show { display: block; }
 
+/* UPLOAD BUTTON */
+.upload-btn {
+  width: 44px; height: 44px; flex-shrink: 0; border-radius: 2px;
+  border: 1px solid var(--hair-strong); display: grid; place-items: center; font-size: 17px;
+  transition: all 0.3s var(--ease); position: relative;
+}
+.upload-btn:hover { border-color: var(--paper); }
+.upload-btn.uploading { opacity: 0.5; pointer-events: none; }
+.kb-badge {
+  position: absolute; top: -6px; right: -6px;
+  background: var(--green); color: var(--ink); font-size: 10px; font-weight: 700;
+  width: 18px; height: 18px; border-radius: 50%;
+  display: grid; place-items: center; font-family: var(--font-mono);
+}
+.upload-error {
+  position: absolute; bottom: 76px; left: 32px; max-width: 60%;
+  font-family: var(--font-mono); font-size: 12px;
+  background: rgba(226,96,58,0.12); border: 1px solid rgba(226,96,58,0.3);
+  color: #f0a58c; padding: 8px 12px; border-radius: 3px;
+}
+
 /* ============================================================
    EMAIL BUTTON & MODAL
    ============================================================ */

@@ -321,12 +321,40 @@ function EmailModal({ text, onClose }) {
 }
 
 /* ==================== SESSION VIEW ==================== */
-function Session({ role, messages, isThinking, onSend, onDisconnect }) {
+function Session({ role, messages, isThinking, onSend, onDisconnect, sessionId }) {
   const [input, setInput] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [emailText, setEmailText] = useState(null);
+  const [kbChunks, setKbChunks] = useState(0);
+  const [uploadError, setUploadError] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
   const msgsRef = useRef(null);
   const { isListening, transcript, startListening, stopListening } = useSpeech();
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
+  const handleUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !sessionId) return;
+    e.target.value = "";
+    setUploadError(null);
+    setUploading(true);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      form.append("session_id", sessionId);
+      const res = await fetch(`${apiUrl}/upload`, { method: "POST", body: form });
+      const data = await res.json();
+      if (data.error) {
+        setUploadError(data.error);
+      } else {
+        setKbChunks(data.total_chunks);
+      }
+    } catch {
+      setUploadError("Upload failed");
+    }
+    setUploading(false);
+  };
 
   const scrollChat = useCallback(() => {
     if (msgsRef.current) msgsRef.current.scrollTop = msgsRef.current.scrollHeight;
@@ -438,7 +466,12 @@ function Session({ role, messages, isThinking, onSend, onDisconnect }) {
 
           <form className="chat-input" onSubmit={handleSubmit}>
             {transcript && <div className="mic-tip show">&#127897; {transcript}</div>}
+            {uploadError && <div className="upload-error">{uploadError}</div>}
             <button type="button" className={`mic${isListening ? " rec" : ""}`} onClick={handleMic} title="Voice input">&#127908;</button>
+            <button type="button" className={`upload-btn${uploading ? " uploading" : ""}`} onClick={() => fileInputRef.current?.click()} title="Upload to knowledge base" disabled={uploading}>
+              &#128206;{kbChunks > 0 && <span className="kb-badge">{kbChunks}</span>}
+            </button>
+            <input ref={fileInputRef} type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.md" style={{ display: "none" }} onChange={handleUpload} />
             <input
               className="cinput"
               type="text"
@@ -459,7 +492,7 @@ function Session({ role, messages, isThinking, onSend, onDisconnect }) {
 export default function App() {
   const [role, setRole] = useState("cs");
   const [scrolled, setScrolled] = useState(false);
-  const { messages, isConnected, isThinking, connect, disconnect, sendMessage } = useWebSocket(role);
+  const { messages, isConnected, isThinking, sessionId, connect, disconnect, sendMessage } = useWebSocket(role);
   const { speak, unlockAudio } = useSpeech();
 
   useEffect(() => {
@@ -516,6 +549,7 @@ export default function App() {
           isThinking={isThinking}
           onSend={sendMessage}
           onDisconnect={handleDisconnect}
+          sessionId={sessionId}
         />
       )}
     </>

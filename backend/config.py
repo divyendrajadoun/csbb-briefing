@@ -11,7 +11,9 @@ HEYGEN_API_KEY = os.getenv("HEYGEN_API_KEY", "")
 RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
 RESEND_FROM_EMAIL = os.getenv("RESEND_FROM_EMAIL", "briefing@schoolofai.ai")
 MODEL = "llama-3.3-70b-versatile"
+VISION_MODEL = "llama-4-scout-17b-16e-instruct"
 MAX_TOKENS = 4096
+MAX_UPLOAD_MB = 10
 
 DATA_DIR = Path(__file__).resolve().parent / "data"
 AUDIT_LOG_PATH = Path(__file__).resolve().parent / "audit.jsonl"

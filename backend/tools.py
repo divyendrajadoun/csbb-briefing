@@ -130,6 +130,23 @@ TOOL_SCHEMAS = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "search_knowledge_base",
+            "description": "Search the user's uploaded knowledge base (handwritten notes, PDFs, images, text files). Returns matching text chunks with filename and page number. Use this when the user asks about content they have uploaded.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "Search keywords to find in uploaded documents",
+                    },
+                },
+                "required": ["query"],
+            },
+        },
+    },
 ]
 
 
@@ -217,6 +234,38 @@ def submit_for_approval(action_type: str, title: str, details: str) -> dict:
     }
 
 
+# --- Knowledge Base ---
+
+# Populated by main.py: session_id -> list of {"filename", "text", "page"}
+knowledge_bases: dict[str, list] = {}
+
+
+def search_knowledge_base(query: str, session_id: str = None) -> dict:
+    chunks = knowledge_bases.get(session_id, [])
+    if not chunks:
+        return {"found": False, "message": "No documents uploaded yet.", "source": "Knowledge Base"}
+
+    keywords = query.lower().split()
+    scored = []
+    for chunk in chunks:
+        text_lower = chunk["text"].lower()
+        hits = sum(1 for kw in keywords if kw in text_lower)
+        if hits > 0:
+            scored.append((hits, chunk))
+
+    scored.sort(key=lambda x: x[0], reverse=True)
+    top = scored[:5]
+
+    if not top:
+        return {"found": False, "message": f"No matches for '{query}' in uploaded documents.", "source": "Knowledge Base"}
+
+    results = [
+        {"filename": c["filename"], "page": c["page"], "excerpt": c["text"][:500]}
+        for _, c in top
+    ]
+    return {"found": True, "results": results, "source": "Knowledge Base (uploaded docs)"}
+
+
 # --- Dispatcher ---
 
 TOOL_HANDLERS = {
@@ -226,12 +275,15 @@ TOOL_HANDLERS = {
     "get_pending_files": get_pending_files,
     "get_officer_profile": get_officer_profile,
     "submit_for_approval": submit_for_approval,
+    "search_knowledge_base": search_knowledge_base,
 }
 
 
-def execute_tool(name: str, arguments: dict) -> str:
+def execute_tool(name: str, arguments: dict, session_id: str = None) -> str:
     handler = TOOL_HANDLERS.get(name)
     if not handler:
         return json.dumps({"error": f"Unknown tool: {name}"})
+    if name == "search_knowledge_base":
+        arguments = {**(arguments or {}), "session_id": session_id}
     result = handler(**(arguments or {}))
     return json.dumps(result, ensure_ascii=False)

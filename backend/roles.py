@@ -8,6 +8,7 @@ ROLES = {
             "get_pending_files",
             "get_officer_profile",
             "submit_for_approval",
+            "search_knowledge_base",
         ],
     },
     "ps": {
@@ -19,6 +20,7 @@ ROLES = {
             "get_pending_files",
             "get_officer_profile",
             "submit_for_approval",
+            "search_knowledge_base",
         ],
     },
     "support_cell": {
@@ -27,6 +29,7 @@ ROLES = {
             "get_schedule",
             "get_scheme_status",
             "get_alerts",
+            "search_knowledge_base",
         ],
     },
 }

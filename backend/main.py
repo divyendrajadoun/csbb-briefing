@@ -1,13 +1,15 @@
 import json
 import uuid
 import httpx
-from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from roles import ROLES
 from audit import log_event
 from claude_client import process_message
-from config import ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID, RESEND_API_KEY, RESEND_FROM_EMAIL, DATA_DIR
+from config import ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID, RESEND_API_KEY, RESEND_FROM_EMAIL, DATA_DIR, MAX_UPLOAD_MB
+from tools import knowledge_bases
+from kb import extract_text_from_upload
 
 app = FastAPI(title="CSBB - CS Bihar Voice Bot")
 
@@ -102,6 +104,43 @@ async def send_email(request: Request):
         return {"error": str(e)}
 
 
+@app.post("/upload")
+async def upload_file(file: UploadFile = File(...), session_id: str = Form(...)):
+    if not session_id:
+        return {"error": "Missing session_id"}
+
+    contents = await file.read()
+    if len(contents) > MAX_UPLOAD_MB * 1024 * 1024:
+        return {"error": f"File too large (max {MAX_UPLOAD_MB}MB)"}
+
+    try:
+        chunks = extract_text_from_upload(file.filename, contents, file.content_type or "")
+    except Exception as e:
+        log_event("upload_error", "system", session_id, {"filename": file.filename, "error": str(e)})
+        return {"error": f"Failed to process file: {str(e)}"}
+
+    # Add filename to each chunk and store
+    for chunk in chunks:
+        chunk["filename"] = file.filename
+
+    if session_id not in knowledge_bases:
+        knowledge_bases[session_id] = []
+    knowledge_bases[session_id].extend(chunks)
+
+    log_event("file_uploaded", "system", session_id, {
+        "filename": file.filename,
+        "chunks": len(chunks),
+        "total_kb_chunks": len(knowledge_bases[session_id]),
+    })
+
+    return {
+        "status": "ok",
+        "filename": file.filename,
+        "chunks": len(chunks),
+        "total_chunks": len(knowledge_bases[session_id]),
+    }
+
+
 @app.websocket("/ws/{role}")
 async def websocket_endpoint(websocket: WebSocket, role: str):
     if role not in ROLES:
@@ -147,6 +186,7 @@ async def websocket_endpoint(websocket: WebSocket, role: str):
                 role_label=role_label,
                 conversation_history=sessions[session_id],
                 send_callback=send_callback,
+                session_id=session_id,
             )
 
             log_event("assistant_response", role, session_id, {"history_len": len(sessions[session_id])})
@@ -154,10 +194,12 @@ async def websocket_endpoint(websocket: WebSocket, role: str):
     except WebSocketDisconnect:
         log_event("disconnect", role, session_id, {})
         sessions.pop(session_id, None)
+        knowledge_bases.pop(session_id, None)
     except Exception as e:
         log_event("error", role, session_id, {"error": str(e)})
         await websocket.send_json({"type": "error", "message": str(e)})
         sessions.pop(session_id, None)
+        knowledge_bases.pop(session_id, None)
 
 
 if __name__ == "__main__":
