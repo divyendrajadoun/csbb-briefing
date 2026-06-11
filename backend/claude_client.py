@@ -16,11 +16,14 @@ async def process_message(
     conversation_history: list,
     send_callback,
     session_id: str = None,
+    groq_api_key_override: str = None,
 ):
     """
     Process a user message through Groq with tool use.
     send_callback(event_type, data) is called to send results back.
     """
+    groq_client = Groq(api_key=groq_api_key_override) if groq_api_key_override else client
+
     allowed = get_allowed_tools(role)
     tools = [t for t in TOOL_SCHEMAS if t["function"]["name"] in allowed]
     kb_count = len(knowledge_bases.get(session_id, []))
@@ -36,7 +39,7 @@ async def process_message(
     while True:
         for attempt in range(max_retries + 1):
             try:
-                response = client.chat.completions.create(
+                response = groq_client.chat.completions.create(
                     model=MODEL,
                     max_tokens=MAX_TOKENS,
                     tools=tools if tools else None,
@@ -49,7 +52,7 @@ async def process_message(
                     continue
                 if "tool_use_failed" in str(e):
                     # Fall back to no tools
-                    response = client.chat.completions.create(
+                    response = groq_client.chat.completions.create(
                         model=MODEL,
                         max_tokens=MAX_TOKENS,
                         messages=messages,

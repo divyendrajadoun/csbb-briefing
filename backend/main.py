@@ -23,6 +23,8 @@ app.add_middleware(
 
 # Store conversation histories per session
 sessions: dict[str, list] = {}
+# Per-session settings overrides (groq_api_key, elevenlabs_api_key, elevenlabs_voice_id, heygen_url)
+session_settings: dict[str, dict] = {}
 
 
 @app.get("/health")
@@ -35,6 +37,21 @@ async def list_roles():
     return {k: v["label"] for k, v in ROLES.items()}
 
 
+@app.post("/settings")
+async def save_settings(request: Request):
+    body = await request.json()
+    sid = body.get("session_id")
+    if not sid:
+        return {"error": "Missing session_id"}
+    session_settings[sid] = {
+        "groq_api_key": body.get("groq_api_key", ""),
+        "elevenlabs_api_key": body.get("elevenlabs_api_key", ""),
+        "elevenlabs_voice_id": body.get("elevenlabs_voice_id", ""),
+        "heygen_url": body.get("heygen_url", ""),
+    }
+    return {"status": "ok"}
+
+
 @app.post("/tts")
 async def text_to_speech(request: Request):
     body = await request.json()
@@ -42,9 +59,14 @@ async def text_to_speech(request: Request):
     if not text:
         return {"error": "No text provided"}
 
-    url = f"https://api.elevenlabs.io/v1/text-to-speech/{ELEVENLABS_VOICE_ID}"
+    sid = body.get("session_id", "")
+    s = session_settings.get(sid, {})
+    api_key = s.get("elevenlabs_api_key") or ELEVENLABS_API_KEY
+    voice_id = s.get("elevenlabs_voice_id") or ELEVENLABS_VOICE_ID
+
+    url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
     headers = {
-        "xi-api-key": ELEVENLABS_API_KEY,
+        "xi-api-key": api_key,
         "Content-Type": "application/json",
         "Accept": "audio/mpeg",
     }
@@ -180,6 +202,7 @@ async def websocket_endpoint(websocket: WebSocket, role: str):
 
             await websocket.send_json({"type": "thinking"})
 
+            groq_key = session_settings.get(session_id, {}).get("groq_api_key", "")
             await process_message(
                 user_text=user_text,
                 role=role,
@@ -187,6 +210,7 @@ async def websocket_endpoint(websocket: WebSocket, role: str):
                 conversation_history=sessions[session_id],
                 send_callback=send_callback,
                 session_id=session_id,
+                groq_api_key_override=groq_key or None,
             )
 
             log_event("assistant_response", role, session_id, {"history_len": len(sessions[session_id])})
@@ -195,11 +219,13 @@ async def websocket_endpoint(websocket: WebSocket, role: str):
         log_event("disconnect", role, session_id, {})
         sessions.pop(session_id, None)
         knowledge_bases.pop(session_id, None)
+        session_settings.pop(session_id, None)
     except Exception as e:
         log_event("error", role, session_id, {"error": str(e)})
         await websocket.send_json({"type": "error", "message": str(e)})
         sessions.pop(session_id, None)
         knowledge_bases.pop(session_id, None)
+        session_settings.pop(session_id, None)
 
 
 if __name__ == "__main__":

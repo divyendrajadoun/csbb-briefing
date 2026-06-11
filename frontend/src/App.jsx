@@ -3,7 +3,12 @@ import useWebSocket from "./hooks/useWebSocket";
 import useSpeech from "./hooks/useSpeech";
 import "./App.css";
 
-const HEYGEN_URL = "https://embed.liveavatar.com/v1/e316b24d-f7c1-4f11-beee-92674735d61e?orientation=horizontal";
+const DEFAULT_HEYGEN_URL = "https://embed.liveavatar.com/v1/e316b24d-f7c1-4f11-beee-92674735d61e?orientation=horizontal";
+
+function loadSettings() {
+  try { return JSON.parse(localStorage.getItem("csbb_settings") || "{}"); } catch { return {}; }
+}
+function saveSettings(s) { localStorage.setItem("csbb_settings", JSON.stringify(s)); }
 
 const ROLES = [
   { id: "cs", label: "chief secretary" },
@@ -18,11 +23,11 @@ const SUGGESTIONS = [
   { q: "Show high priority pending files", label: "pending files" },
 ];
 
-function Avatar() {
+function Avatar({ heygenUrl }) {
   return (
     <div className="avatar-screen">
       <iframe
-        src={HEYGEN_URL}
+        src={heygenUrl || DEFAULT_HEYGEN_URL}
         allow="microphone; autoplay; encrypted-media"
         title="HeyGen LiveAvatar"
       />
@@ -320,6 +325,65 @@ function EmailModal({ text, onClose }) {
   );
 }
 
+/* ==================== SETTINGS MODAL ==================== */
+function SettingsModal({ onClose, sessionId }) {
+  const [s, setS] = useState(loadSettings);
+  const [saved, setSaved] = useState(false);
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
+  const update = (key, val) => setS(prev => ({ ...prev, [key]: val }));
+
+  const handleSave = async () => {
+    saveSettings(s);
+    if (sessionId) {
+      try {
+        await fetch(`${apiUrl}/settings`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ session_id: sessionId, ...s }),
+        });
+      } catch {}
+    }
+    setSaved(true);
+    setTimeout(() => { setSaved(false); onClose(); }, 800);
+  };
+
+  return (
+    <div className="email-overlay" onClick={onClose}>
+      <div className="settings-modal" onClick={e => e.stopPropagation()}>
+        <div className="email-header">
+          <span className="marker">// settings</span>
+          <button className="email-close" onClick={onClose}>&times;</button>
+        </div>
+
+        <div className="settings-group">
+          <label className="settings-label">Groq API Key</label>
+          <input type="password" className="settings-input" placeholder="gsk_..." value={s.groq_api_key || ""} onChange={e => update("groq_api_key", e.target.value)} />
+        </div>
+
+        <div className="settings-group">
+          <label className="settings-label">ElevenLabs API Key</label>
+          <input type="password" className="settings-input" placeholder="sk_..." value={s.elevenlabs_api_key || ""} onChange={e => update("elevenlabs_api_key", e.target.value)} />
+        </div>
+
+        <div className="settings-group">
+          <label className="settings-label">ElevenLabs Voice ID</label>
+          <input type="text" className="settings-input" placeholder="EXAVITQu4vr4xnSDxMaL" value={s.elevenlabs_voice_id || ""} onChange={e => update("elevenlabs_voice_id", e.target.value)} />
+        </div>
+
+        <div className="settings-group">
+          <label className="settings-label">HeyGen Avatar URL</label>
+          <input type="text" className="settings-input" placeholder="https://embed.liveavatar.com/v1/..." value={s.heygen_url || ""} onChange={e => update("heygen_url", e.target.value)} />
+        </div>
+
+        <div className="settings-hint">Keys are saved in your browser. Leave blank to use defaults.</div>
+
+        <button className="email-send" onClick={handleSave}>{saved ? "Saved!" : "Save settings"}</button>
+      </div>
+    </div>
+  );
+}
+
 /* ==================== SESSION VIEW ==================== */
 function Session({ role, messages, isThinking, onSend, onDisconnect, sessionId }) {
   const [input, setInput] = useState("");
@@ -328,6 +392,7 @@ function Session({ role, messages, isThinking, onSend, onDisconnect, sessionId }
   const [kbChunks, setKbChunks] = useState(0);
   const [uploadError, setUploadError] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const fileInputRef = useRef(null);
   const msgsRef = useRef(null);
   const { isListening, transcript, startListening, stopListening } = useSpeech();
@@ -391,6 +456,7 @@ function Session({ role, messages, isThinking, onSend, onDisconnect, sessionId }
         <div className="session-role">// role <span className="em">{roleLabel}</span></div>
         <div className="session-right-nav">
           <div className="session-conn"><span className="dot" /> connected</div>
+          <button className="btn-settings" onClick={() => setShowSettings(true)} title="Settings">&#9881;</button>
           <button className="btn-dc" onClick={onDisconnect}>Disconnect</button>
         </div>
       </nav>
@@ -400,7 +466,7 @@ function Session({ role, messages, isThinking, onSend, onDisconnect, sessionId }
           <div className="marker">// live avatar</div>
           <div className="session-avatar">
             <div className="avatar-glow" />
-            <Avatar />
+            <Avatar heygenUrl={loadSettings().heygen_url} />
           </div>
           <div className="session-facts">
             <div className="row"><span className="k">status</span><span className="v"><span className="g">&bull; live</span></span></div>
@@ -484,6 +550,7 @@ function Session({ role, messages, isThinking, onSend, onDisconnect, sessionId }
         </div>
       </div>
       {emailText && <EmailModal text={emailText} onClose={() => setEmailText(null)} />}
+      {showSettings && <SettingsModal onClose={() => setShowSettings(false)} sessionId={sessionId} />}
     </div>
   );
 }
@@ -505,7 +572,7 @@ export default function App() {
   useEffect(() => {
     if (messages.length === 0) return;
     const last = messages[messages.length - 1];
-    if (last.type === "assistant") speak(last.text);
+    if (last.type === "assistant") speak(last.text, sessionId);
   }, [messages, speak]);
 
   // Add welcome message on connect
@@ -516,6 +583,20 @@ export default function App() {
     if (isConnected && !welcomeSent) setWelcomeSent(true);
     if (!isConnected) setWelcomeSent(false);
   }, [isConnected, welcomeSent]);
+
+  // Push saved settings to backend when session connects
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+  useEffect(() => {
+    if (!sessionId) return;
+    const s = loadSettings();
+    if (s.groq_api_key || s.elevenlabs_api_key || s.elevenlabs_voice_id || s.heygen_url) {
+      fetch(`${apiUrl}/settings`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ session_id: sessionId, ...s }),
+      }).catch(() => {});
+    }
+  }, [sessionId, apiUrl]);
 
   const handleStart = () => {
     unlockAudio();

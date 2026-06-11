@@ -543,6 +543,36 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   color: #f0a58c; padding: 8px 12px; border-radius: 3px;
 }
 
+/* SETTINGS */
+.btn-settings {
+  background: none; border: 1px solid var(--hair); border-radius: 2px;
+  color: var(--paper-dim); font-size: 16px; width: 34px; height: 34px;
+  display: grid; place-items: center; cursor: pointer;
+  transition: color 0.2s var(--ease), border-color 0.2s var(--ease);
+}
+.btn-settings:hover { color: var(--paper); border-color: var(--paper-faint); }
+.settings-modal {
+  background: var(--ink); border: 1px solid var(--hair-strong);
+  border-radius: 4px; width: 90%; max-width: 440px; padding: 24px;
+  display: flex; flex-direction: column; gap: 16px; max-height: 80vh; overflow-y: auto;
+}
+.settings-group { display: flex; flex-direction: column; gap: 6px; }
+.settings-label {
+  font-family: var(--font-mono); font-size: 11px; color: var(--paper-faint);
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.settings-input {
+  height: 40px; padding: 0 12px; background: var(--panel-2);
+  border: 1px solid var(--hair); border-radius: 2px; color: var(--paper);
+  font-size: 13px; font-family: var(--font-mono); outline: none;
+  transition: border-color 0.2s var(--ease);
+}
+.settings-input:focus { border-color: var(--saffron); }
+.settings-hint {
+  font-size: 11px; color: var(--paper-faint); font-family: var(--font-mono);
+  line-height: 1.5;
+}
+
 /* ============================================================
    EMAIL BUTTON & MODAL
    ============================================================ */

@@ -61,7 +61,7 @@ export default function useSpeech() {
     silent.play().then(() => { unlockedRef.current = true; }).catch(() => {});
   }, []);
 
-  const speak = useCallback(async (text) => {
+  const speak = useCallback(async (text, sessionId) => {
     if (!text) return;
 
     // Stop any currently playing audio
@@ -75,7 +75,7 @@ export default function useSpeech() {
       const res = await fetch(`${apiUrl}/tts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ text, session_id: sessionId || "" }),
       });
 
       if (!res.ok) throw new Error("TTS request failed");
