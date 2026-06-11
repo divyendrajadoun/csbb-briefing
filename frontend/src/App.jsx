@@ -397,8 +397,9 @@ function Session({ role, messages, isThinking, onSend, onDisconnect }) {
               if (msg.type === "assistant") {
                 return (
                   <div className="m bot" key={i}>
-                    <div className="label">csbb <button className="email-btn-inline" onClick={() => setEmailText(msg.text)} title="Email this">&#9993;</button></div>
+                    <div className="label">csbb</div>
                     <div className="body">{msg.text}</div>
+                    <button className="email-btn-msg" onClick={() => setEmailText(msg.text)}>&#9993; Email this</button>
                   </div>
                 );
               }
