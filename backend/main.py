@@ -7,7 +7,7 @@ from fastapi.responses import StreamingResponse
 from roles import ROLES
 from audit import log_event
 from claude_client import process_message
-from config import ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID
+from config import ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID, RESEND_API_KEY, RESEND_FROM_EMAIL, DATA_DIR
 
 app = FastAPI(title="CSBB - CS Bihar Voice Bot")
 
@@ -61,6 +61,45 @@ async def text_to_speech(request: Request):
         media_type="audio/mpeg",
         headers={"Content-Disposition": "inline; filename=speech.mp3"},
     )
+
+
+@app.get("/contacts")
+async def get_contacts():
+    with open(DATA_DIR / "officers.json", "r", encoding="utf-8") as f:
+        officers = json.load(f)
+    return [{"name": o["name"], "post": o["current_post"], "email": o["email"]} for o in officers]
+
+
+@app.post("/send-email")
+async def send_email(request: Request):
+    import resend
+    resend.api_key = RESEND_API_KEY
+
+    body = await request.json()
+    to_emails = body.get("to", [])
+    content = body.get("content", "")
+    subject = body.get("subject", "CSBB Briefing Information")
+
+    if not to_emails or not content:
+        return {"error": "Missing 'to' or 'content'"}
+
+    try:
+        r = resend.Emails.send({
+            "from": f"CSBB Briefing <{RESEND_FROM_EMAIL}>",
+            "to": to_emails,
+            "subject": subject,
+            "html": f"<div style='font-family:sans-serif;line-height:1.6;max-width:600px'>"
+                    f"<h2 style='color:#1a1a2e;border-bottom:2px solid #ff9933;padding-bottom:8px'>CSBB Briefing</h2>"
+                    f"<div style='white-space:pre-wrap;color:#333'>{content}</div>"
+                    f"<hr style='border:none;border-top:1px solid #ddd;margin:24px 0'>"
+                    f"<p style='font-size:12px;color:#999'>Sent from briefing.system — Office of the Chief Secretary, Bihar</p>"
+                    f"</div>",
+        })
+        log_event("email_sent", "system", "", {"to": to_emails, "subject": subject, "resend_id": r.get("id", "")})
+        return {"status": "sent", "id": r.get("id", "")}
+    except Exception as e:
+        log_event("email_error", "system", "", {"to": to_emails, "error": str(e)})
+        return {"error": str(e)}
 
 
 @app.websocket("/ws/{role}")

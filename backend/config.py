@@ -8,6 +8,8 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY", "")
 ELEVENLABS_VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID", "EXAVITQu4vr4xnSDxMaL")
 HEYGEN_API_KEY = os.getenv("HEYGEN_API_KEY", "")
+RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
+RESEND_FROM_EMAIL = os.getenv("RESEND_FROM_EMAIL", "briefing@schoolofai.ai")
 MODEL = "llama-3.3-70b-versatile"
 MAX_TOKENS = 4096
 

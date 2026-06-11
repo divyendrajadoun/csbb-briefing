@@ -523,6 +523,74 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .mic-tip.show { display: block; }
 
 /* ============================================================
+   EMAIL BUTTON & MODAL
+   ============================================================ */
+.email-btn-inline {
+  background: none; border: none; cursor: pointer; font-size: 13px;
+  color: var(--paper-faint); margin-left: 8px; padding: 0 4px;
+  transition: color 0.2s var(--ease);
+}
+.email-btn-inline:hover { color: var(--accent); }
+
+.email-overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+  display: grid; place-items: center; animation: mIn 0.2s var(--ease);
+}
+.email-modal {
+  background: var(--ink); border: 1px solid var(--hair-strong);
+  border-radius: 4px; width: 90%; max-width: 480px; padding: 24px;
+  display: flex; flex-direction: column; gap: 16px; max-height: 80vh; overflow-y: auto;
+}
+.email-header { display: flex; justify-content: space-between; align-items: center; }
+.email-close { background: none; border: none; color: var(--paper-dim); font-size: 22px; cursor: pointer; }
+.email-close:hover { color: var(--paper); }
+.email-preview {
+  font-size: 13px; color: var(--paper-dim); line-height: 1.5;
+  background: var(--panel-2); padding: 12px; border-radius: 3px;
+  border: 1px solid var(--hair); white-space: pre-wrap;
+}
+.email-contacts { display: flex; flex-direction: column; gap: 6px; max-height: 200px; overflow-y: auto; }
+.email-contact {
+  display: flex; flex-direction: column; gap: 2px; text-align: left;
+  padding: 10px 12px; border: 1px solid var(--hair); border-radius: 3px;
+  background: transparent; color: var(--paper-dim); cursor: pointer;
+  transition: border-color 0.2s var(--ease), background 0.2s var(--ease);
+}
+.email-contact:hover { border-color: var(--paper-faint); }
+.email-contact.active { border-color: var(--accent); background: rgba(255,153,51,0.08); }
+.ec-name { font-size: 13px; color: var(--paper); font-weight: 500; }
+.ec-post { font-size: 11px; color: var(--paper-faint); font-family: var(--font-mono); }
+.email-custom { display: flex; gap: 8px; }
+.email-custom input {
+  flex: 1; height: 38px; padding: 0 12px; background: var(--panel-2);
+  border: 1px solid var(--hair); border-radius: 2px; color: var(--paper);
+  font-size: 13px; outline: none;
+}
+.email-custom input:focus { border-color: var(--accent); }
+.email-custom button {
+  height: 38px; padding: 0 14px; border: 1px solid var(--hair-strong);
+  border-radius: 2px; color: var(--paper-dim); font-size: 13px;
+  background: transparent; cursor: pointer;
+}
+.email-custom button:hover { border-color: var(--paper); color: var(--paper); }
+.email-selected { display: flex; flex-wrap: wrap; gap: 6px; }
+.email-chip {
+  font-size: 12px; font-family: var(--font-mono); color: var(--accent);
+  border: 1px solid rgba(255,153,51,0.3); border-radius: 2px;
+  padding: 4px 8px; display: inline-flex; align-items: center; gap: 6px;
+}
+.email-chip button { background: none; border: none; color: var(--paper-faint); cursor: pointer; font-size: 14px; padding: 0; }
+.email-chip button:hover { color: var(--paper); }
+.email-send {
+  height: 42px; border-radius: 2px; background: var(--paper); color: var(--ink);
+  font-weight: 500; font-size: 14px; cursor: pointer; border: none;
+  transition: transform 0.2s var(--ease), opacity 0.2s var(--ease);
+}
+.email-send:hover:not(:disabled) { transform: translateY(-1px); }
+.email-send:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ============================================================
    RESPONSIVE
    ============================================================ */
 @media (max-width: 1020px) {

@@ -232,10 +232,99 @@ function Landing({ onStart, role, setRole, scrolled }) {
   );
 }
 
+/* ==================== EMAIL MODAL ==================== */
+function EmailModal({ text, onClose }) {
+  const [contacts, setContacts] = useState([]);
+  const [selected, setSelected] = useState([]);
+  const [customEmail, setCustomEmail] = useState("");
+  const [sending, setSending] = useState(false);
+  const [result, setResult] = useState(null);
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
+  useEffect(() => {
+    fetch(`${apiUrl}/contacts`).then(r => r.json()).then(setContacts).catch(() => {});
+  }, [apiUrl]);
+
+  const toggleContact = (email) => {
+    setSelected(prev => prev.includes(email) ? prev.filter(e => e !== email) : [...prev, email]);
+  };
+
+  const addCustom = () => {
+    const em = customEmail.trim();
+    if (em && em.includes("@") && !selected.includes(em)) {
+      setSelected(prev => [...prev, em]);
+      setCustomEmail("");
+    }
+  };
+
+  const handleSend = async () => {
+    if (selected.length === 0) return;
+    setSending(true);
+    try {
+      const res = await fetch(`${apiUrl}/send-email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ to: selected, content: text }),
+      });
+      const data = await res.json();
+      setResult(data.error ? `Error: ${data.error}` : "Sent!");
+      if (!data.error) setTimeout(onClose, 1500);
+    } catch {
+      setResult("Failed to send");
+    }
+    setSending(false);
+  };
+
+  return (
+    <div className="email-overlay" onClick={onClose}>
+      <div className="email-modal" onClick={e => e.stopPropagation()}>
+        <div className="email-header">
+          <span className="marker">// send via email</span>
+          <button className="email-close" onClick={onClose}>&times;</button>
+        </div>
+        <div className="email-preview">{text.length > 200 ? text.slice(0, 200) + "..." : text}</div>
+        <div className="email-contacts">
+          {contacts.map(c => (
+            <button
+              key={c.email}
+              className={`email-contact${selected.includes(c.email) ? " active" : ""}`}
+              onClick={() => toggleContact(c.email)}
+            >
+              <span className="ec-name">{c.name}</span>
+              <span className="ec-post">{c.post}</span>
+            </button>
+          ))}
+        </div>
+        <div className="email-custom">
+          <input
+            type="email"
+            placeholder="Add email address..."
+            value={customEmail}
+            onChange={e => setCustomEmail(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && (e.preventDefault(), addCustom())}
+          />
+          <button onClick={addCustom}>Add</button>
+        </div>
+        {selected.length > 0 && (
+          <div className="email-selected">
+            {selected.map(em => (
+              <span key={em} className="email-chip">{em} <button onClick={() => toggleContact(em)}>&times;</button></span>
+            ))}
+          </div>
+        )}
+        <button className="email-send" onClick={handleSend} disabled={sending || selected.length === 0}>
+          {sending ? "Sending..." : result || `Send to ${selected.length} recipient${selected.length !== 1 ? "s" : ""}`}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /* ==================== SESSION VIEW ==================== */
 function Session({ role, messages, isThinking, onSend, onDisconnect }) {
   const [input, setInput] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(true);
+  const [emailText, setEmailText] = useState(null);
   const msgsRef = useRef(null);
   const { isListening, transcript, startListening, stopListening } = useSpeech();
 
@@ -308,7 +397,7 @@ function Session({ role, messages, isThinking, onSend, onDisconnect }) {
               if (msg.type === "assistant") {
                 return (
                   <div className="m bot" key={i}>
-                    <div className="label">csbb</div>
+                    <div className="label">csbb <button className="email-btn-inline" onClick={() => setEmailText(msg.text)} title="Email this">&#9993;</button></div>
                     <div className="body">{msg.text}</div>
                   </div>
                 );
@@ -360,6 +449,7 @@ function Session({ role, messages, isThinking, onSend, onDisconnect }) {
           </form>
         </div>
       </div>
+      {emailText && <EmailModal text={emailText} onClose={() => setEmailText(null)} />}
     </div>
   );
 }

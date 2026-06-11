@@ -4,3 +4,4 @@ groq==0.25.0
 python-dotenv==1.0.1
 websockets==13.0
 httpx==0.28.1
+resend==2.5.0
