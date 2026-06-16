@@ -1,0 +1,486 @@
+================================================================================
+  CSBB - BRIEFING.SYSTEM | PROJECT DOCUMENTATION
+  AI Briefing Assistant for the Office of the Chief Secretary, Bihar
+================================================================================
+
+PROJECT NAME:     Palini Ji (CSBB - CS Bihar Voice Bot)
+LIVE FRONTEND:    https://frontend-bice-nu-59.vercel.app
+LIVE BACKEND:     https://csbb-backend-production.up.railway.app
+GITHUB REPO:      https://github.com/divyendrajadoun/csbb-briefing
+
+
+================================================================================
+  1. PROJECT OVERVIEW
+================================================================================
+
+Palini Ji is a bilingual (Hindi/English/Hinglish) AI briefing assistant built
+for the Office of the Chief Secretary, Bihar. It provides:
+
+- Voice + chat interface with a HeyGen live avatar
+- Grounded answers using 7 tool calls (schedule, schemes, alerts, files,
+  officers, approvals, knowledge base search)
+- Role-based access (Chief Secretary, Principal Secretary, Support Cell)
+- File upload with OCR for handwritten notes, PDFs, and images
+- Per-user configurable API keys (Groq, ElevenLabs, HeyGen)
+- Email forwarding of any bot response
+- Full audit logging (append-only JSONL)
+
+
+================================================================================
+  2. TECH STACK
+================================================================================
+
+BACKEND:
+  - Python 3.11+ / FastAPI / Uvicorn
+  - Groq API (LLM: meta-llama/llama-4-scout-17b-16e-instruct)
+  - Groq Vision API (OCR: llama-4-scout-17b-16e-instruct)
+  - ElevenLabs API (text-to-speech, multilingual v2)
+  - HeyGen LiveAvatar (embedded iframe)
+  - Resend API (email sending)
+  - PyMuPDF (PDF text extraction)
+  - WebSocket for real-time chat
+
+FRONTEND:
+  - React 19 / Vite 8
+  - Web Speech API (voice input, Hindi recognition)
+  - Custom hooks (useWebSocket, useSpeech)
+  - CSS (no framework, custom editorial design)
+
+DEPLOYMENT:
+  - Backend: Railway (auto-deploy from GitHub, PORT=8080)
+  - Frontend: Vercel (npx vercel --prod)
+
+
+================================================================================
+  3. PROJECT STRUCTURE
+================================================================================
+
+palini_ji/
+|
+|-- backend/
+|   |-- main.py              # FastAPI app, WebSocket, /upload, /settings, /tts
+|   |-- config.py             # Environment variables and constants
+|   |-- claude_client.py      # Groq LLM processing with tool-use loop
+|   |-- tools.py              # 7 tool schemas, handlers, and dispatcher
+|   |-- roles.py              # Role definitions and tool access control
+|   |-- system_prompt.py      # System prompt template for Palini Ji
+|   |-- kb.py                 # Knowledge base: PDF/image/text extraction + OCR
+|   |-- audit.py              # Append-only JSONL audit logging
+|   |-- requirements.txt      # Python dependencies
+|   |-- Procfile              # Railway deployment command
+|   |-- data/
+|   |   |-- calendar.json     # CS schedule/calendar data
+|   |   |-- schemes.json      # Government scheme status data
+|   |   |-- alerts.json       # Situational alerts data
+|   |   |-- pending_files.json# Files pending CS approval
+|   |   |-- officers.json     # Officer profiles and postings
+|   |   |-- workflows.json    # Workflow definitions
+|   |-- audit.jsonl           # Audit log (generated at runtime)
+|
+|-- frontend/
+|   |-- src/
+|   |   |-- App.jsx           # Main app: Landing, Session, EmailModal, SettingsModal
+|   |   |-- App.css           # Full editorial-style CSS
+|   |   |-- main.jsx          # React entry point
+|   |   |-- index.css         # Base styles
+|   |   |-- hooks/
+|   |   |   |-- useWebSocket.js  # WebSocket connection hook
+|   |   |   |-- useSpeech.js     # Speech recognition + TTS hook
+|   |-- package.json
+|   |-- vite.config.js
+|
+|-- .env                      # API keys (not committed)
+
+
+================================================================================
+  4. BACKEND FILES - DETAILED DESCRIPTION
+================================================================================
+
+--- main.py ---
+  The FastAPI application entry point. Contains:
+  - GET /health          : Health check endpoint
+  - GET /roles           : Returns available roles (cs, ps, support_cell)
+  - POST /settings       : Saves per-session API key overrides
+  - POST /tts            : Text-to-speech via ElevenLabs (uses per-session keys)
+  - GET /contacts        : Returns officer contacts for email modal
+  - POST /send-email     : Sends email via Resend API
+  - POST /upload         : Uploads file to knowledge base (PDF/image/text)
+  - WebSocket /ws/{role} : Real-time chat with tool-calling LLM
+
+  Manages three in-memory dictionaries:
+  - sessions: dict[str, list]          # conversation history per session
+  - knowledge_bases: dict[str, list]   # uploaded document chunks per session
+  - session_settings: dict[str, dict]  # API key overrides per session
+
+  All three are cleaned up on WebSocket disconnect.
+
+--- config.py ---
+  Loads environment variables from .env and defines constants:
+  - GROQ_API_KEY, ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID
+  - HEYGEN_API_KEY, RESEND_API_KEY, RESEND_FROM_EMAIL
+  - MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
+  - VISION_MODEL = "llama-4-scout-17b-16e-instruct"
+  - MAX_TOKENS = 4096
+  - MAX_UPLOAD_MB = 10
+  - DATA_DIR, AUDIT_LOG_PATH
+
+--- claude_client.py ---
+  Handles LLM interaction with Groq API:
+  - process_message() accepts user text, role, conversation history,
+    session_id, and optional groq_api_key_override
+  - Builds messages with system prompt + conversation history
+  - Runs a tool-use loop: sends to Groq, executes tool calls, loops
+    until the model produces a final text response
+  - Retry logic for tool_use_failed errors (2 retries, then fallback to no tools)
+  - Sends events via callback: "thinking", "tool_call", "message_complete"
+
+--- tools.py ---
+  Defines 7 tools with OpenAI-format schemas and handlers:
+
+  1. get_schedule(date, date_end)
+     - Returns CS calendar events for a date or date range
+     - Source: CS Calendar System
+
+  2. get_scheme_status(scheme_id)
+     - Returns status, metrics, lagging districts for government schemes
+     - Supported: mgnrega, pmay_g, jjm, jeevika, midday_meal
+     - Source: Scheme MIS Dashboard
+
+  3. get_alerts(severity)
+     - Returns situational alerts sorted by severity
+     - Types: weather, flood, health, SLA breach, law & order, infrastructure
+     - Source: State Situation Room
+
+  4. get_pending_files(priority, department)
+     - Returns files pending CS approval with ageing info
+     - Restricted to CS and PS roles
+     - Source: CS File Tracking System
+
+  5. get_officer_profile(query)
+     - Looks up officers by name, post, or district
+     - Returns service details, contact, posting history
+     - Restricted to CS and PS roles
+     - Source: HR-MIS, GAD
+
+  6. submit_for_approval(action_type, title, details)
+     - Queues an action for human approval (NOT auto-executed)
+     - Types: meeting_cancellation, mom_draft, broadcast
+     - Restricted to CS and PS roles
+     - Source: Workflow Engine
+
+  7. search_knowledge_base(query, session_id)
+     - Keyword search across uploaded document chunks
+     - Returns top 5 matching chunks with filename and page number
+     - Available to all roles
+     - Source: Knowledge Base (uploaded docs)
+
+  execute_tool(name, arguments, session_id) dispatches calls to handlers.
+
+--- roles.py ---
+  Defines three roles with scoped tool access:
+
+  - cs (Chief Secretary): ALL 7 tools
+  - ps (Principal Secretary): ALL 7 tools
+  - support_cell (Support Cell): get_schedule, get_scheme_status,
+    get_alerts, search_knowledge_base (4 tools, no files/officers/approvals)
+
+--- system_prompt.py ---
+  Defines the Palini Ji persona and behavioral guidelines:
+  - Always use tools before answering factual questions
+  - Cite sources inline
+  - Be concise (CS time is valuable)
+  - Flag severity for alerts
+  - Bilingual responses matching user language
+  - Role awareness and access restrictions
+  - Approval actions are HELD, not executed
+  - No hallucination policy
+  - Knowledge base: use search_knowledge_base, cite filename and page
+
+  Dynamic context: today's date, user role, KB status (chunk count).
+
+--- kb.py ---
+  Knowledge base extraction logic:
+
+  - extract_text_from_upload(filename, contents, content_type)
+    Routes by file type:
+    * PDF: PyMuPDF extracts native text per page. Scanned/handwritten
+      pages (< 50 chars of text) are rendered to image at 200 DPI
+      and OCR'd via Groq vision model.
+    * Images (PNG/JPG/WEBP): Direct OCR via Groq vision model.
+    * Text files (TXT/MD): Read as UTF-8.
+
+  - _ocr_image(image_bytes, mime)
+    Sends base64-encoded image to Groq vision model with prompt:
+    "Extract ALL text from this image exactly as written.
+     The text may be in Hindi, English, or both.
+     Return only the extracted text, nothing else."
+
+  - _extract_pdf(contents)
+    Opens PDF with PyMuPDF, iterates pages, extracts text or falls
+    back to vision OCR for scanned pages.
+
+--- audit.py ---
+  Append-only audit logging to audit.jsonl:
+  - log_event(event_type, role, session_id, data)
+  - Events: user_message, assistant_response, file_uploaded, upload_error,
+    email_sent, email_error, disconnect, error
+
+--- requirements.txt ---
+  fastapi==0.115.0
+  uvicorn[standard]==0.30.0
+  groq==0.25.0
+  python-dotenv==1.0.1
+  websockets==13.0
+  httpx==0.28.1
+  resend==2.30.1
+  python-multipart>=0.0.12
+  PyMuPDF>=1.25.1
+
+--- Procfile ---
+  web: uvicorn main:app --host 0.0.0.0 --port $PORT
+
+
+================================================================================
+  5. FRONTEND FILES - DETAILED DESCRIPTION
+================================================================================
+
+--- App.jsx ---
+  Main React application with these components:
+
+  1. Landing page
+     - Hero section with project description
+     - Live avatar demo embed (HeyGen iframe)
+     - 6 capability cards (calendar, schemes, alerts, files, officers, workflows)
+     - Governance stats (100% audit-logged, 6 tool sources, 0 fabricated facts)
+     - Role selector (cs, ps, support_cell)
+     - Bilingual demo examples (Hindi, English, Hinglish)
+     - About/CTA section
+
+  2. Session view
+     - Split layout: avatar on left, chat on right
+     - Chat messages: user, assistant, tool_call, error, thinking dots
+     - Suggestion chips for first-time queries
+     - Voice input button (Web Speech API, Hindi recognition)
+     - Upload button (paperclip icon) with KB chunk count badge
+     - Text input with Send button
+     - Settings gear button in top nav
+     - Disconnect button
+
+  3. EmailModal
+     - Shows officer contacts from /contacts endpoint
+     - Custom email address input
+     - Multi-select recipients
+     - Preview of message content
+     - Sends via /send-email endpoint
+
+  4. SettingsModal
+     - Groq API Key (password field)
+     - ElevenLabs API Key (password field)
+     - ElevenLabs Voice ID (text field)
+     - HeyGen Avatar URL (text field)
+     - Saves to localStorage (csbb_settings key)
+     - Pushes to backend /settings endpoint with session_id
+
+  5. App (root component)
+     - Manages role, scroll, connection state
+     - Auto-speaks assistant messages via ElevenLabs TTS
+     - Auto-pushes saved settings to backend on WebSocket connect
+
+--- App.css ---
+  Full editorial-style CSS (~672 lines):
+  - CSS custom properties for theming (ink, paper, saffron, green)
+  - Typography: Instrument Serif (display), JetBrains Mono (mono), Inter Tight (sans)
+  - Background effects (radial gradients, column lines, grain overlay)
+  - Responsive breakpoints: 1020px, 880px, 640px
+  - Session view: fixed fullscreen with split grid layout
+  - Chat styles: user/bot/tool/thinking messages
+  - Upload button with green badge for KB chunk count
+  - Settings modal styles
+  - Email modal styles
+  - Animations: reveal, hero stagger, message slide-in, thinking dots, mic pulse
+
+--- hooks/useWebSocket.js ---
+  Custom React hook for WebSocket connection:
+  - connect(): Opens WebSocket to /ws/{role}
+  - disconnect(): Closes WebSocket
+  - sendMessage(text): Sends user_message JSON
+  - Handles events: connected, thinking, tool_call, message_complete, error
+  - Returns: messages, isConnected, isThinking, sessionId, connect, disconnect, sendMessage
+
+--- hooks/useSpeech.js ---
+  Custom React hook for voice input + TTS output:
+  - startListening(onResult): Web Speech API with lang="hi-IN"
+  - stopListening(): Stops recognition
+  - speak(text, sessionId): Calls /tts endpoint, plays audio
+  - unlockAudio(): Unlocks iOS/Safari audio playback on first interaction
+  - Returns: isListening, transcript, startListening, stopListening, speak, unlockAudio
+
+
+================================================================================
+  6. DATA FILES
+================================================================================
+
+backend/data/calendar.json    - CS daily schedule with meetings, times, locations
+backend/data/schemes.json     - Government scheme status (MGNREGA, PMAY-G, JJM, etc.)
+backend/data/alerts.json      - Situational alerts with severity levels
+backend/data/pending_files.json - Files pending CS approval with department and ageing
+backend/data/officers.json    - Officer profiles with postings and contact info
+backend/data/workflows.json   - Workflow definitions for approvals
+
+
+================================================================================
+  7. ENVIRONMENT VARIABLES (.env)
+================================================================================
+
+GROQ_API_KEY=gsk_...              # Groq API key for LLM + vision OCR
+ELEVENLABS_API_KEY=sk_...         # ElevenLabs API key for TTS
+ELEVENLABS_VOICE_ID=EXAVITQu...   # ElevenLabs voice ID (default: Sarah)
+HEYGEN_API_KEY=...                # HeyGen API key (for avatar)
+RESEND_API_KEY=re_...             # Resend API key for email sending
+RESEND_FROM_EMAIL=briefing@...    # From email address for Resend
+
+Frontend .env (set in Vercel):
+VITE_API_URL=https://csbb-backend-production.up.railway.app
+VITE_WS_URL=wss://csbb-backend-production.up.railway.app/ws
+
+
+================================================================================
+  8. API ENDPOINTS
+================================================================================
+
+GET  /health              - Returns {"status":"ok","service":"csbb"}
+GET  /roles               - Returns {"cs":"Chief Secretary","ps":"Principal Secretary",...}
+POST /settings            - Save per-session API key overrides
+POST /tts                 - Text-to-speech (ElevenLabs), returns audio/mpeg
+GET  /contacts            - Returns officer contacts for email
+POST /send-email          - Sends email via Resend
+POST /upload              - Upload file to knowledge base (multipart/form-data)
+WS   /ws/{role}           - WebSocket chat (role: cs, ps, support_cell)
+
+WebSocket message types (client -> server):
+  {"type": "user_message", "text": "...", "session_id": "..."}
+
+WebSocket message types (server -> client):
+  {"type": "connected", "session_id": "...", "role": "...", "role_label": "..."}
+  {"type": "thinking"}
+  {"type": "tool_call", "tool": "...", "input": {...}}
+  {"type": "message_complete", "text": "..."}
+  {"type": "error", "message": "..."}
+
+
+================================================================================
+  9. LLM MODEL DETAILS
+================================================================================
+
+MODEL: meta-llama/llama-4-scout-17b-16e-instruct (via Groq)
+  - 500K tokens per day limit (vs 100K for llama-3.3-70b)
+  - ~0.4 second latency per call
+  - Full tool calling (function calling) support
+  - Supports Hindi + English
+
+VISION MODEL: llama-4-scout-17b-16e-instruct (via Groq)
+  - Used for OCR of scanned/handwritten pages
+  - Accepts base64-encoded images
+  - Handles Hindi + English handwriting
+
+Previous models tried and rejected:
+  - llama-3.3-70b-versatile: Hit 100K TPD rate limit
+  - compound-beta-mini: Does not support tool calling
+  - qwen/qwen3-32b: Supports tools but ~35 second latency (too slow)
+
+
+================================================================================
+  10. FEATURES IMPLEMENTED
+================================================================================
+
+CORE:
+  [x] Bilingual chat (Hindi/English/Hinglish) via WebSocket
+  [x] 7 grounded tools with cited sources
+  [x] Role-based access control (3 roles)
+  [x] HeyGen live avatar integration
+  [x] Voice input (Web Speech API, Hindi)
+  [x] Voice output (ElevenLabs TTS, multilingual v2)
+  [x] Full audit logging (append-only JSONL)
+  [x] Email forwarding of any bot response
+
+KNOWLEDGE BASE (added):
+  [x] File upload (PDF, images, text)
+  [x] PDF text extraction via PyMuPDF
+  [x] OCR for scanned/handwritten pages via Groq vision model
+  [x] In-memory per-session KB storage
+  [x] Keyword search tool (search_knowledge_base)
+  [x] Upload button with chunk count badge in chat
+  [x] Supports: .pdf, .png, .jpg, .jpeg, .webp, .txt, .md
+  [x] 10MB max file size
+
+SETTINGS PAGE (added):
+  [x] Per-user configurable API keys
+  [x] Groq API Key override
+  [x] ElevenLabs API Key override
+  [x] ElevenLabs Voice ID override
+  [x] HeyGen Avatar URL override
+  [x] Saved in browser localStorage
+  [x] Auto-pushed to backend on WebSocket connect
+  [x] Settings gear button in session nav
+
+
+================================================================================
+  11. DEPLOYMENT
+================================================================================
+
+BACKEND (Railway):
+  - Service: csbb-backend
+  - URL: https://csbb-backend-production.up.railway.app
+  - Source: GitHub (divyendrajadoun/csbb-briefing, master branch)
+  - Runtime: Python (auto-detected via Procfile)
+  - PORT env var: 8080
+  - Auto-deploy on push to master
+
+FRONTEND (Vercel):
+  - URL: https://frontend-bice-nu-59.vercel.app
+  - Deploy command: npx vercel --prod (from frontend/ directory)
+  - Environment variables set in Vercel dashboard:
+    VITE_API_URL=https://csbb-backend-production.up.railway.app
+    VITE_WS_URL=wss://csbb-backend-production.up.railway.app/ws
+
+
+================================================================================
+  12. HOW TO RUN LOCALLY
+================================================================================
+
+BACKEND:
+  cd backend
+  pip install -r requirements.txt
+  # Create .env with required API keys (see section 7)
+  python main.py
+  # Runs on http://localhost:8000
+
+FRONTEND:
+  cd frontend
+  npm install
+  npm run dev
+  # Runs on http://localhost:5173
+  # Connects to backend at http://localhost:8000 by default
+
+
+================================================================================
+  13. TESTED SCENARIOS
+================================================================================
+
+  [x] Upload Hindi text PDF (Nagar Vikash & Panchayti Raj) - 2 chunks extracted
+  [x] Upload education policy PDF - 2 chunks extracted
+  [x] Upload handwritten schedule (Adobe Scan) - 1 chunk via OCR
+  [x] Ask "Aaj ka schedule kya hai?" - get_schedule tool called
+  [x] Ask "MGNREGA status" - get_scheme_status tool called
+  [x] Ask "Koi critical alert hai?" - get_alerts tool called
+  [x] WebSocket connection with role-based routing
+  [x] Settings save and restore from localStorage
+  [x] Settings pushed to backend on connect
+  [x] TTS with per-session ElevenLabs keys
+  [x] Email forwarding via Resend
+  [x] Live deployment on Railway + Vercel
+
+
+================================================================================
+  END OF DOCUMENTATION
+================================================================================
