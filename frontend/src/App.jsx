@@ -28,8 +28,9 @@ function Avatar({ heygenUrl }) {
     <div className="avatar-screen">
       <iframe
         src={heygenUrl || DEFAULT_HEYGEN_URL}
-        allow="microphone; autoplay; encrypted-media"
+        allow="autoplay; encrypted-media"
         title="HeyGen LiveAvatar"
+        style={{ pointerEvents: "none" }}
       />
     </div>
   );
