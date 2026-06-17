@@ -127,7 +127,7 @@ async def send_email(request: Request):
         return {"error": str(e)}
 
 
-HEYGEN_DEFAULT_AVATAR_ID = os.environ.get("HEYGEN_AVATAR_ID", "65f9e3c9-d48b-4118-b73a-4ae2e3cbb8f0")
+HEYGEN_DEFAULT_AVATAR_ID = os.environ.get("HEYGEN_AVATAR_ID", "bf00036b-558a-44b5-b2ff-1e3cec0f4ceb")
 
 
 @app.post("/heygen/session-token")
