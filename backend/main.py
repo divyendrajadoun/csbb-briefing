@@ -1,4 +1,5 @@
 import json
+import os
 import uuid
 import httpx
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, UploadFile, File, Form
@@ -126,6 +127,9 @@ async def send_email(request: Request):
         return {"error": str(e)}
 
 
+HEYGEN_DEFAULT_AVATAR_ID = os.environ.get("HEYGEN_AVATAR_ID", "65f9e3c9-d48b-4118-b73a-4ae2e3cbb8f0")
+
+
 @app.post("/heygen/session-token")
 async def heygen_session_token():
     if not HEYGEN_API_KEY:
@@ -135,10 +139,12 @@ async def heygen_session_token():
             resp = await client.post(
                 "https://api.liveavatar.com/v1/sessions/token",
                 headers={"x-api-key": HEYGEN_API_KEY, "Content-Type": "application/json"},
-                json={},
+                json={"avatar_id": HEYGEN_DEFAULT_AVATAR_ID, "mode": "LITE"},
             )
             resp.raise_for_status()
-            return resp.json()
+            data = resp.json()
+            # Return token in the format the SDK expects
+            return {"token": data["data"]["session_token"]}
     except Exception as e:
         return {"error": str(e)}
 
