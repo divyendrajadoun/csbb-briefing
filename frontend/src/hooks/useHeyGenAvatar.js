@@ -7,8 +7,10 @@ export default function useHeyGenAvatar() {
   const [avatarReady, setAvatarReady] = useState(false);
   const [avatarError, setAvatarError] = useState(null);
   const sessionRef = useRef(null);
+  const readyRef = useRef(false);
 
   const initAvatar = useCallback(async (videoEl) => {
+    if (sessionRef.current) return; // already initialized
     setAvatarError(null);
     setAvatarReady(false);
 
@@ -24,10 +26,12 @@ export default function useHeyGenAvatar() {
 
       session.on(SessionEvent.SESSION_STREAM_READY, () => {
         session.attach(videoEl);
+        readyRef.current = true;
         setAvatarReady(true);
       });
 
       session.on(SessionEvent.SESSION_DISCONNECTED, () => {
+        readyRef.current = false;
         setAvatarReady(false);
       });
 
@@ -39,11 +43,15 @@ export default function useHeyGenAvatar() {
     }
   }, []);
 
+  // Use ref for ready check so this callback never changes reference
+  // Returns true if avatar handled it, false otherwise
   const speak = useCallback((text) => {
-    if (sessionRef.current && avatarReady && text) {
+    if (sessionRef.current && readyRef.current && text) {
       sessionRef.current.message(text);
+      return true;
     }
-  }, [avatarReady]);
+    return false;
+  }, []);
 
   const destroyAvatar = useCallback(async () => {
     if (sessionRef.current) {
@@ -52,6 +60,7 @@ export default function useHeyGenAvatar() {
       } catch {}
       sessionRef.current = null;
     }
+    readyRef.current = false;
     setAvatarReady(false);
     setAvatarError(null);
   }, []);

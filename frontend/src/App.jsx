@@ -40,21 +40,18 @@ function Avatar({ heygenUrl }) {
 function SessionAvatar({ onSpeakRef, heygenUrl }) {
   const videoRef = useRef(null);
   const { initAvatar, speak, destroyAvatar, avatarReady, avatarError } = useHeyGenAvatar();
-  const initAttemptedRef = useRef(false);
 
+  // Init once on mount, destroy on unmount only
   useEffect(() => {
-    if (videoRef.current && !initAttemptedRef.current) {
-      initAttemptedRef.current = true;
-      initAvatar(videoRef.current);
-    }
+    if (videoRef.current) initAvatar(videoRef.current);
     return () => { destroyAvatar(); };
-  }, [initAvatar, destroyAvatar]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
+  // Expose speak to parent — speak ref is stable (never changes)
   useEffect(() => {
-    if (onSpeakRef) {
-      onSpeakRef.current = avatarReady ? speak : null;
-    }
-  }, [avatarReady, speak, onSpeakRef]);
+    if (onSpeakRef) onSpeakRef.current = speak;
+  }, [onSpeakRef, speak]);
 
   if (avatarError) {
     return (
@@ -611,16 +608,15 @@ export default function App() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Auto-speak assistant messages: avatar lip-sync if SDK connected, else ElevenLabs TTS
+  // Auto-speak assistant messages: send to avatar for lip-sync, ElevenLabs TTS as fallback audio
   useEffect(() => {
     if (messages.length === 0) return;
     const last = messages[messages.length - 1];
     if (last.type === "assistant") {
-      if (avatarSpeakRef.current) {
-        avatarSpeakRef.current(last.text);
-      } else {
-        speak(last.text, sessionId);
-      }
+      // Try avatar lip-sync (has built-in TTS). If SDK not ready, it's a no-op.
+      const avatarHandled = avatarSpeakRef.current && avatarSpeakRef.current(last.text);
+      // Fallback to ElevenLabs if avatar didn't handle it
+      if (!avatarHandled) speak(last.text, sessionId);
     }
   }, [messages, speak, sessionId]);
 
