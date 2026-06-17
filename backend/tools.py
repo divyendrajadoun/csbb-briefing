@@ -1,6 +1,7 @@
 import json
 from datetime import datetime
-from config import DATA_DIR
+from config import DATA_DIR, RESEND_API_KEY, RESEND_FROM_EMAIL
+from audit import log_event
 
 # --- Load data ---
 
@@ -147,6 +148,31 @@ TOOL_SCHEMAS = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "send_briefing_email",
+            "description": "Send a briefing email to an officer. Looks up the recipient by name, post, or district from the officer directory and sends the email via the official briefing system. Restricted to CS and PS roles.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "recipient_query": {
+                        "type": "string",
+                        "description": "Officer name, post title, or district to look up the recipient",
+                    },
+                    "subject": {
+                        "type": "string",
+                        "description": "Email subject line",
+                    },
+                    "content": {
+                        "type": "string",
+                        "description": "Email body content (plain text, will be formatted as HTML)",
+                    },
+                },
+                "required": ["recipient_query", "subject", "content"],
+            },
+        },
+    },
 ]
 
 
@@ -234,6 +260,56 @@ def submit_for_approval(action_type: str, title: str, details: str) -> dict:
     }
 
 
+def send_briefing_email(recipient_query: str, subject: str, content: str) -> dict:
+    import resend
+    resend.api_key = RESEND_API_KEY
+
+    officers = _load("officers.json")
+    query_lower = recipient_query.lower()
+
+    matches = [
+        o for o in officers
+        if query_lower in o["name"].lower()
+        or query_lower in o["current_post"].lower()
+        or (o["district"] and query_lower in o["district"].lower())
+    ]
+
+    if not matches:
+        return {"sent": False, "message": f"No officer found matching '{recipient_query}'", "source": "HR-MIS"}
+
+    to_emails = [o["email"] for o in matches]
+    recipient_names = [f"{o['name']} ({o['current_post']})" for o in matches]
+
+    try:
+        r = resend.Emails.send({
+            "from": f"CSBB Briefing <{RESEND_FROM_EMAIL}>",
+            "to": to_emails,
+            "subject": subject,
+            "html": f"<div style='font-family:sans-serif;line-height:1.6;max-width:600px'>"
+                    f"<h2 style='color:#1a1a2e;border-bottom:2px solid #ff9933;padding-bottom:8px'>CSBB Briefing</h2>"
+                    f"<div style='white-space:pre-wrap;color:#333'>{content}</div>"
+                    f"<hr style='border:none;border-top:1px solid #ddd;margin:24px 0'>"
+                    f"<p style='font-size:12px;color:#999'>Sent from briefing.system — Office of the Chief Secretary, Bihar</p>"
+                    f"</div>",
+        })
+        log_event("email_sent_by_tool", "system", "", {
+            "to": to_emails,
+            "subject": subject,
+            "resend_id": r.get("id", ""),
+            "query": recipient_query,
+        })
+        return {
+            "sent": True,
+            "recipients": recipient_names,
+            "emails": to_emails,
+            "resend_id": r.get("id", ""),
+            "source": "Resend Email API",
+        }
+    except Exception as e:
+        log_event("email_error_by_tool", "system", "", {"to": to_emails, "error": str(e)})
+        return {"sent": False, "message": f"Email send failed: {str(e)}", "source": "Resend Email API"}
+
+
 # --- Knowledge Base ---
 
 # Populated by main.py: session_id -> list of {"filename", "text", "page"}
@@ -276,6 +352,7 @@ TOOL_HANDLERS = {
     "get_officer_profile": get_officer_profile,
     "submit_for_approval": submit_for_approval,
     "search_knowledge_base": search_knowledge_base,
+    "send_briefing_email": send_briefing_email,
 }
 
 

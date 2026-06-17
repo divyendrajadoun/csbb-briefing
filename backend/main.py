@@ -7,7 +7,7 @@ from fastapi.responses import StreamingResponse
 from roles import ROLES
 from audit import log_event
 from claude_client import process_message
-from config import ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID, RESEND_API_KEY, RESEND_FROM_EMAIL, DATA_DIR, MAX_UPLOAD_MB
+from config import ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID, RESEND_API_KEY, RESEND_FROM_EMAIL, HEYGEN_API_KEY, DATA_DIR, MAX_UPLOAD_MB
 from tools import knowledge_bases
 from kb import extract_text_from_upload
 
@@ -123,6 +123,23 @@ async def send_email(request: Request):
         return {"status": "sent", "id": r.get("id", "")}
     except Exception as e:
         log_event("email_error", "system", "", {"to": to_emails, "error": str(e)})
+        return {"error": str(e)}
+
+
+@app.post("/heygen/session-token")
+async def heygen_session_token():
+    if not HEYGEN_API_KEY:
+        return {"error": "HEYGEN_API_KEY not configured"}
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            resp = await client.post(
+                "https://api.liveavatar.com/v1/sessions/token",
+                headers={"x-api-key": HEYGEN_API_KEY, "Content-Type": "application/json"},
+                json={},
+            )
+            resp.raise_for_status()
+            return resp.json()
+    except Exception as e:
         return {"error": str(e)}
 
 

@@ -9,6 +9,7 @@ ROLES = {
             "get_officer_profile",
             "submit_for_approval",
             "search_knowledge_base",
+            "send_briefing_email",
         ],
     },
     "ps": {
@@ -21,6 +22,7 @@ ROLES = {
             "get_officer_profile",
             "submit_for_approval",
             "search_knowledge_base",
+            "send_briefing_email",
         ],
     },
     "support_cell": {
