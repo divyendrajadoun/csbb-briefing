@@ -108,5 +108,27 @@
     "phone": "9431XXXX10",
     "email": "dm.araria@bihar.gov.in",
     "posting_since": "2026-01-15"
+  },
+  {
+    "id": "off_011",
+    "name": "Shri Devi Kumar",
+    "service": "IAS",
+    "batch": "2007",
+    "current_post": "Secretary, IT Department",
+    "district": null,
+    "phone": "9431XXXX11",
+    "email": "divy2009@gmail.com",
+    "posting_since": "2025-09-01"
+  },
+  {
+    "id": "off_012",
+    "name": "Shri Palane Singh",
+    "service": "IAS",
+    "batch": "2004",
+    "current_post": "Secretary, Urban Development",
+    "district": null,
+    "phone": "9431XXXX12",
+    "email": "palane@gmail.com",
+    "posting_since": "2025-05-15"
   }
 ]
