@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import useWebSocket from "./hooks/useWebSocket";
 import useSpeech from "./hooks/useSpeech";
-import useHeyGenAvatar from "./hooks/useHeyGenAvatar";
 import "./App.css";
 
-const DEFAULT_HEYGEN_URL = "https://embed.liveavatar.com/v1/0caa3ce0-6642-4c69-a6e6-d37e08c31781?orientation=horizontal";
+const DEFAULT_HEYGEN_URL = "https://embed.liveavatar.com/v1/c067d5e1-d158-4d6b-a18b-b0845004ea04?orientation=horizontal";
 
 function loadSettings() {
   try { return JSON.parse(localStorage.getItem("csbb_settings") || "{}"); } catch { return {}; }
@@ -24,43 +23,14 @@ const SUGGESTIONS = [
   { q: "Show high priority pending files", label: "pending files" },
 ];
 
-function Avatar({ heygenUrl, onSpeakRef }) {
-  const videoRef = useRef(null);
-  const { initAvatar, speak, destroyAvatar, avatarReady, avatarError } = useHeyGenAvatar();
-  const initAttemptedRef = useRef(false);
-
-  useEffect(() => {
-    if (videoRef.current && !initAttemptedRef.current) {
-      initAttemptedRef.current = true;
-      initAvatar(videoRef.current);
-    }
-    return () => { destroyAvatar(); };
-  }, [initAvatar, destroyAvatar]);
-
-  // Expose speak function to parent via ref
-  useEffect(() => {
-    if (onSpeakRef) {
-      onSpeakRef.current = avatarReady ? speak : null;
-    }
-  }, [avatarReady, speak, onSpeakRef]);
-
-  // SDK failed — fall back to iframe
-  if (avatarError) {
-    return (
-      <div className="avatar-screen">
-        <iframe
-          src={heygenUrl || DEFAULT_HEYGEN_URL}
-          allow="microphone; autoplay; encrypted-media"
-          title="HeyGen LiveAvatar"
-        />
-      </div>
-    );
-  }
-
+function Avatar({ heygenUrl }) {
   return (
     <div className="avatar-screen">
-      <video ref={videoRef} autoPlay playsInline style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-      {!avatarReady && <div className="avatar-loading">Connecting avatar...</div>}
+      <iframe
+        src={heygenUrl || DEFAULT_HEYGEN_URL}
+        allow="microphone; autoplay; encrypted-media"
+        title="HeyGen LiveAvatar"
+      />
     </div>
   );
 }
@@ -415,7 +385,7 @@ function SettingsModal({ onClose, sessionId }) {
 }
 
 /* ==================== SESSION VIEW ==================== */
-function Session({ role, messages, isThinking, onSend, onDisconnect, sessionId, avatarSpeakRef }) {
+function Session({ role, messages, isThinking, onSend, onDisconnect, sessionId }) {
   const [input, setInput] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [emailText, setEmailText] = useState(null);
@@ -496,7 +466,7 @@ function Session({ role, messages, isThinking, onSend, onDisconnect, sessionId, 
           <div className="marker">// live avatar</div>
           <div className="session-avatar">
             <div className="avatar-glow" />
-            <Avatar heygenUrl={loadSettings().heygen_url} onSpeakRef={avatarSpeakRef} />
+            <Avatar heygenUrl={loadSettings().heygen_url} />
           </div>
           <div className="session-facts">
             <div className="row"><span className="k">status</span><span className="v"><span className="g">&bull; live</span></span></div>
@@ -591,7 +561,6 @@ export default function App() {
   const [scrolled, setScrolled] = useState(false);
   const { messages, isConnected, isThinking, sessionId, connect, disconnect, sendMessage } = useWebSocket(role);
   const { speak, unlockAudio } = useSpeech();
-  const avatarSpeakRef = useRef(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -599,17 +568,11 @@ export default function App() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Auto-speak assistant messages: avatar SDK (lip-synced) if available, else ElevenLabs TTS
+  // Auto-speak assistant messages
   useEffect(() => {
     if (messages.length === 0) return;
     const last = messages[messages.length - 1];
-    if (last.type === "assistant") {
-      if (avatarSpeakRef.current) {
-        avatarSpeakRef.current(last.text);
-      } else {
-        speak(last.text, sessionId);
-      }
-    }
+    if (last.type === "assistant") speak(last.text, sessionId);
   }, [messages, speak, sessionId]);
 
   // Add welcome message on connect
@@ -668,7 +631,6 @@ export default function App() {
           onSend={sendMessage}
           onDisconnect={handleDisconnect}
           sessionId={sessionId}
-          avatarSpeakRef={avatarSpeakRef}
         />
       )}
     </>
