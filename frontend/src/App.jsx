@@ -40,6 +40,8 @@ function Avatar({ heygenUrl }) {
 function SessionAvatar({ onSpeakRef, heygenUrl }) {
   const videoRef = useRef(null);
   const { initAvatar, speak, destroyAvatar, avatarReady, avatarError } = useHeyGenAvatar();
+  const speakRef = useRef(speak);
+  speakRef.current = speak;
 
   // Init once on mount, destroy on unmount only
   useEffect(() => {
@@ -48,28 +50,34 @@ function SessionAvatar({ onSpeakRef, heygenUrl }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Expose speak to parent — speak ref is stable (never changes)
+  // Expose speak to parent via stable wrapper
   useEffect(() => {
-    if (onSpeakRef) onSpeakRef.current = speak;
-  }, [onSpeakRef, speak]);
+    if (onSpeakRef) {
+      onSpeakRef.current = (text) => speakRef.current(text);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  if (avatarError) {
-    return (
-      <div className="avatar-screen">
+  // SDK failed or not ready — show iframe. SDK ready — show video.
+  // Always keep video element mounted so ref is never lost.
+  const showVideo = avatarReady && !avatarError;
+
+  return (
+    <div className="avatar-screen">
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        style={{ width: "100%", height: "100%", objectFit: "cover", display: showVideo ? "block" : "none" }}
+      />
+      {!showVideo && (
         <iframe
           src={heygenUrl || DEFAULT_HEYGEN_URL}
           allow="autoplay; encrypted-media"
           title="HeyGen LiveAvatar"
           style={{ pointerEvents: "none" }}
         />
-      </div>
-    );
-  }
-
-  return (
-    <div className="avatar-screen">
-      <video ref={videoRef} autoPlay playsInline style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-      {!avatarReady && <div className="avatar-loading">Connecting avatar...</div>}
+      )}
     </div>
   );
 }
