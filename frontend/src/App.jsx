@@ -4,7 +4,7 @@ import useSpeech from "./hooks/useSpeech";
 import useHeyGenAvatar from "./hooks/useHeyGenAvatar";
 import "./App.css";
 
-const DEFAULT_HEYGEN_URL = "https://embed.liveavatar.com/v1/e316b24d-f7c1-4f11-beee-92674735d61e?orientation=horizontal";
+const DEFAULT_HEYGEN_URL = "https://embed.liveavatar.com/v1/0caa3ce0-6642-4c69-a6e6-d37e08c31781?orientation=horizontal";
 
 function loadSettings() {
   try { return JSON.parse(localStorage.getItem("csbb_settings") || "{}"); } catch { return {}; }
