@@ -569,6 +569,15 @@ export default function App() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // Auto-speak assistant messages via ElevenLabs TTS
+  useEffect(() => {
+    if (messages.length === 0) return;
+    const last = messages[messages.length - 1];
+    if (last.type === "assistant") {
+      speak(last.text, sessionId);
+    }
+  }, [messages, speak, sessionId]);
+
   // Add welcome message on connect
   const [welcomeSent, setWelcomeSent] = useState(false);
   const allMessages = isConnected && !welcomeSent ? messages : messages;
