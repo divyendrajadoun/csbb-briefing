@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import useWebSocket from "./hooks/useWebSocket";
 import useSpeech from "./hooks/useSpeech";
-import useHeyGenAvatar from "./hooks/useHeyGenAvatar";
 import "./App.css";
 
 const DEFAULT_HEYGEN_URL = "https://embed.liveavatar.com/v1/c067d5e1-d158-4d6b-a18b-b0845004ea04?orientation=horizontal";
@@ -24,60 +23,15 @@ const SUGGESTIONS = [
   { q: "Show high priority pending files", label: "pending files" },
 ];
 
-function Avatar({ heygenUrl }) {
+function Avatar({ heygenUrl, interactive }) {
   return (
     <div className="avatar-screen">
       <iframe
         src={heygenUrl || DEFAULT_HEYGEN_URL}
-        allow="autoplay; encrypted-media"
+        allow={interactive ? "microphone; autoplay; encrypted-media" : "autoplay; encrypted-media"}
         title="HeyGen LiveAvatar"
-        style={{ pointerEvents: "none" }}
+        style={interactive ? {} : { pointerEvents: "none" }}
       />
-    </div>
-  );
-}
-
-function SessionAvatar({ onSpeakRef, heygenUrl }) {
-  const videoRef = useRef(null);
-  const { initAvatar, speak, destroyAvatar, avatarReady, avatarError } = useHeyGenAvatar();
-  const speakRef = useRef(speak);
-  speakRef.current = speak;
-
-  // Init once on mount, destroy on unmount only
-  useEffect(() => {
-    if (videoRef.current) initAvatar(videoRef.current);
-    return () => { destroyAvatar(); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Expose speak to parent via stable wrapper
-  useEffect(() => {
-    if (onSpeakRef) {
-      onSpeakRef.current = (text) => speakRef.current(text);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // SDK failed or not ready — show iframe. SDK ready — show video.
-  // Always keep video element mounted so ref is never lost.
-  const showVideo = avatarReady && !avatarError;
-
-  return (
-    <div className="avatar-screen">
-      <video
-        ref={videoRef}
-        autoPlay
-        playsInline
-        style={{ width: "100%", height: "100%", objectFit: "cover", display: showVideo ? "block" : "none" }}
-      />
-      {!showVideo && (
-        <iframe
-          src={heygenUrl || DEFAULT_HEYGEN_URL}
-          allow="autoplay; encrypted-media"
-          title="HeyGen LiveAvatar"
-          style={{ pointerEvents: "none" }}
-        />
-      )}
     </div>
   );
 }
@@ -432,7 +386,7 @@ function SettingsModal({ onClose, sessionId }) {
 }
 
 /* ==================== SESSION VIEW ==================== */
-function Session({ role, messages, isThinking, onSend, onDisconnect, sessionId, avatarSpeakRef }) {
+function Session({ role, messages, isThinking, onSend, onDisconnect, sessionId }) {
   const [input, setInput] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [emailText, setEmailText] = useState(null);
@@ -513,7 +467,7 @@ function Session({ role, messages, isThinking, onSend, onDisconnect, sessionId, 
           <div className="marker">// live avatar</div>
           <div className="session-avatar">
             <div className="avatar-glow" />
-            <SessionAvatar heygenUrl={loadSettings().heygen_url} onSpeakRef={avatarSpeakRef} />
+            <Avatar heygenUrl={loadSettings().heygen_url} interactive />
           </div>
           <div className="session-facts">
             <div className="row"><span className="k">status</span><span className="v"><span className="g">&bull; live</span></span></div>
@@ -608,25 +562,12 @@ export default function App() {
   const [scrolled, setScrolled] = useState(false);
   const { messages, isConnected, isThinking, sessionId, connect, disconnect, sendMessage } = useWebSocket(role);
   const { speak, unlockAudio } = useSpeech();
-  const avatarSpeakRef = useRef(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-
-  // Auto-speak assistant messages: send to avatar for lip-sync, ElevenLabs TTS as fallback audio
-  useEffect(() => {
-    if (messages.length === 0) return;
-    const last = messages[messages.length - 1];
-    if (last.type === "assistant") {
-      // Try avatar lip-sync (has built-in TTS). If SDK not ready, it's a no-op.
-      const avatarHandled = avatarSpeakRef.current && avatarSpeakRef.current(last.text);
-      // Fallback to ElevenLabs if avatar didn't handle it
-      if (!avatarHandled) speak(last.text, sessionId);
-    }
-  }, [messages, speak, sessionId]);
 
   // Add welcome message on connect
   const [welcomeSent, setWelcomeSent] = useState(false);
@@ -684,7 +625,6 @@ export default function App() {
           onSend={sendMessage}
           onDisconnect={handleDisconnect}
           sessionId={sessionId}
-          avatarSpeakRef={avatarSpeakRef}
         />
       )}
     </>
